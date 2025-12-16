@@ -2,10 +2,10 @@ services:
   # Uygulama Servisi (API)
   app:
     build: .  # Mevcut klasördeki Dockerfile'ı kullan
-    container_name: hackathon_api
+    container_name: hackathon_api_mocker
     restart: always
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - .env  # Ortam değişkenlerini buradan oku
     environment:
@@ -25,7 +25,7 @@ services:
   # Veritabanı Servisi
   db:
     image: postgres:16-alpine
-    container_name: hackathon_db
+    container_name: hackathon_db_mocker
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -45,7 +45,7 @@ services:
   # Redis - Cache
   redis:
       image: redis:7-alpine
-      container_name: hackathon_redis
+      container_name: hackathon_redis_mocker
       restart: always
       ports:
         - "6379:6379"
@@ -57,7 +57,7 @@ services:
 
   worker:
       build: .
-      container_name: hackathon_worker
+      container_name: hackathon_worker_mocker
       command: celery -A app.core.config.celery.celery_app worker --loglevel=info
       env_file:
         - .env
@@ -79,7 +79,7 @@ services:
       # 2. Flower (İzleme Paneli)
   flower:
         build: .
-        container_name: hackathon_flower
+        container_name: hackathon_flower_mocker
         command: celery -A app.core.config.celery.celery_app flower --port=5555
         ports:
           - "5555:5555" # Tarayıcıdan erişim için
@@ -94,7 +94,7 @@ services:
 
   dozzle:
     image: amir20/dozzle:latest
-    container_name: hackathon_dozzle
+    container_name: hackathon_dozzle_mocker
     restart: always
     volumes:
       # Docker'ın kalbine (soketine) bağlanıp logları okuması için şart

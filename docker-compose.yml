@@ -1,178 +1,28 @@
 services:
   # ============================================
-  # FRONTEND - Next.js
-  # ============================================
-  frontend:
-    build:
-      context: ./hackathon_frontend
-      dockerfile: Dockerfile
-    container_name: hackathon_frontend
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-    depends_on:
-      - app
-    networks:
-      - hackathon_network
-
-  # ============================================
-  # BACKEND - FastAPI
+  # BACKEND - FastAPI (Mocker Provider API)
   # ============================================
   app:
     build:
       context: ./hackathon_backend
       dockerfile: Dockerfile
-    container_name: hackathon_api
+    container_name: mocker_api
     restart: always
     ports:
-      - "8000:8000"
+      - "8002:8000" # Main app uses 8000, we use 8002
     env_file:
       - ./hackathon_backend/.env
     environment:
-      - POSTGRES_SERVER=db
-      - POSTGRES_PORT=5432
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-      - AUTO_GENERATE_MIGRATIONS=true  # Set to false in production
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - AUTO_GENERATE_MIGRATIONS=false
+      - PROJECT_NAME=MockerAPI
     volumes:
       - ./hackathon_backend/app:/app/app
     networks:
-      - hackathon_network
-
-  # ============================================
-  # DATABASE - PostgreSQL
-  # ============================================
-  db:
-    image: postgres:16-alpine
-    container_name: hackathon_db
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./hackathon_backend/scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - hackathon_network
-
-  # ============================================
-  # CACHE - Redis
-  # ============================================
-  redis:
-    image: redis:7-alpine
-    container_name: hackathon_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - hackathon_network
-
-  # ============================================
-  # REDIS INSIGHT - Redis UI (Modern)
-  # ============================================
-  redis-insight:
-    image: redis/redisinsight:latest
-    container_name: hackathon_redis_ui
-    restart: always
-    ports:
-      - "5540:5540"
-    depends_on:
-      - redis
-    networks:
-      - hackathon_network
-
-  # ============================================
-  # CELERY WORKER
-  # ============================================
-  worker:
-    build:
-      context: ./hackathon_backend
-      dockerfile: Dockerfile
-    container_name: hackathon_worker
-    command: celery -A app.core.celery.celery_app worker --loglevel=info
-    env_file:
-      - ./hackathon_backend/.env
-    environment:
-      - POSTGRES_SERVER=db
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-    depends_on:
-      redis:
-        condition: service_healthy
-      db:
-        condition: service_healthy
-    volumes:
-      - ./hackathon_backend/app:/app/app
-    networks:
-      - hackathon_network
-
-  # ============================================
-  # FLOWER - Celery Monitoring
-  # ============================================
-  flower:
-    build:
-      context: ./hackathon_backend
-      dockerfile: Dockerfile
-    container_name: hackathon_flower
-    command: celery -A app.core.celery.celery_app flower --port=5555
-    ports:
-      - "5555:5555"
-    env_file:
-      - ./hackathon_backend/.env
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-    depends_on:
-      - redis
-      - worker
-    networks:
-      - hackathon_network
-
-  # ============================================
-  # DOZZLE - Log Viewer
-  # ============================================
-  dozzle:
-    image: amir20/dozzle:latest
-    container_name: hackathon_dozzle
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - "8888:8080"
-    networks:
-      - hackathon_network
+      - mocker_network
 
 # ============================================
 # NETWORKS
 # ============================================
 networks:
-  hackathon_network:
+  mocker_network:
     driver: bridge
-
-# ============================================
-# VOLUMES
-# ============================================
-volumes:
-  postgres_data:
