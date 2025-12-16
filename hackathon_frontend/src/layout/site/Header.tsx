@@ -14,7 +14,7 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
 
   const navigation = [
     { name: 'Ana Sayfa', href: '/' },
-    { name: 'Test', href: '/customerService' },
+    { name: 'Customer Service', href: '/customerService' },
   ];
 
   return (
