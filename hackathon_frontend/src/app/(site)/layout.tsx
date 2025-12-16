@@ -1,0 +1,34 @@
+'use client';
+
+import type { ReactNode } from "react";
+
+import { CustomerServiceFAB } from "@/components/CustomerServiceFAB";
+import { Container } from "@/components/ui/Container";
+import { useScroll } from "@/hooks";
+import { SiteFooter } from "@/layout/site/Footer";
+import { SiteHeader } from "@/layout/site/Header";
+
+export default function SiteLayout({ children }: { children: ReactNode }) {
+    const { isScrolled } = useScroll({ threshold: 10 });
+
+    return (
+        <div className="flex min-h-screen flex-col bg-background text-foreground">
+            {/* Header - Fixed position */}
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 transition-[padding] duration-500 ease-out ${isScrolled ? "px-4 pt-4 lg:px-8" : ""
+                    }`}
+            >
+                <SiteHeader isScrolled={isScrolled} />
+            </header>
+            {/* Main content - padding top for fixed header */}
+            <main className="flex-1 pt-24 md:pt-20">{children}</main>
+            {/* Footer - full width background, centered content */}
+            <footer className="mt-auto w-full border-t border-gray-200 bg-white">
+                <Container className="py-8">
+                    <SiteFooter />
+                </Container>
+            </footer>
+            <CustomerServiceFAB />
+        </div>
+    );
+}
