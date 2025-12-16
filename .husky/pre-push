@@ -1,5 +1,8 @@
 set -e
 
+# Windows için PATH düzeltmesi
+export PATH="$PATH:/c/Program Files/nodejs"
+
 # Upstream var mı kontrol et (ilk push senaryosu)
 UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)"
 
@@ -19,7 +22,9 @@ echo "$CHANGED" | grep -q "^hackathon_backend/" && run_backend=true || true
 
 if [ "$run_frontend" = true ]; then
   echo "== Frontend changed: npm test =="
-  npm --prefix hackathon_frontend test
+  cd hackathon_frontend
+  npm test
+  cd ..
 else
   echo "== Frontend not changed: skip tests =="
 fi
