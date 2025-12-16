@@ -1,0 +1,37 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+set -e
+
+# Upstream var mı kontrol et (ilk push senaryosu)
+UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)"
+
+if [ -z "$UPSTREAM" ]; then
+  RANGE="HEAD"
+else
+  RANGE="$UPSTREAM..HEAD"
+fi
+
+CHANGED="$(git diff --name-only $RANGE)"
+
+run_frontend=false
+run_backend=false
+
+echo "$CHANGED" | grep -q "^hackathon_frontend/" && run_frontend=true || true
+echo "$CHANGED" | grep -q "^hackathon_backend/" && run_backend=true || true
+
+if [ "$run_frontend" = true ]; then
+  echo "== Frontend changed: npm test =="
+  npm --prefix hackathon_frontend test
+else
+  echo "== Frontend not changed: skip tests =="
+fi
+
+if [ "$run_backend" = true ]; then
+  echo "== Backend changed: uv run pytest =="
+  cd hackathon_backend
+  uv run pytest -q
+  cd ..
+else
+  echo "== Backend not changed: skip pytest =="
+fi
