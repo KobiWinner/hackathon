@@ -4,87 +4,116 @@ import { useState } from "react";
 
 import Link from "next/link";
 
+import { Menu, User, X } from "lucide-react";
+
+import {
+  CategoriesDropdown,
+  SearchBar
+} from "@/components/header";
+import { Text } from "@/components/ui/typography/Text";
+import { cn } from "@/lib/cn";
 
 interface SiteHeaderProps {
   isScrolled?: boolean;
 }
 
 export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const navigation = [
-    { name: 'Ana Sayfa', href: '/' },
-  ];
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <>
-      {/* Outer wrapper - all corners square at scroll 0, all rounded when scrolled */}
+      {/* Outer wrapper */}
       <div
-        className={`transition-all duration-500 ease-out ${isScrolled
-          ? "rounded-2xl border border-violet-500/15 bg-white/90 shadow-lg shadow-violet-500/10 backdrop-blur-lg"
-          : "rounded-none border border-transparent bg-white shadow-none"
-          }`}
+        className={cn(
+          "transition-all duration-500 ease-out",
+          isScrolled
+            ? "rounded-2xl border border-primary/15 bg-white/90 shadow-lg shadow-primary/10 backdrop-blur-lg"
+            : "rounded-none border border-transparent bg-white shadow-sm"
+        )}
       >
-        {/* Inner container */}
-        <header className="mx-auto max-w-7xl flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between px-4 lg:px-8">
-          <div className="flex items-center justify-between w-full">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-lg font-black text-white shadow-lg shadow-violet-500/30">
-                K
+        <header className="mx-auto max-w-7xl py-4 px-6 lg:px-8">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center gap-6">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 shrink-0">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-600 shadow-lg shadow-primary/30">
+                <Text as="span" size="base" weight="bold" color="white">
+                  K
+                </Text>
               </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Hackathon
-                </h1>
-              </div>
+              <Text as="h1" size="xl" weight="semibold" className="hidden lg:block">
+                KobiWinner
+              </Text>
             </Link>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden ml-auto rounded-lg p-2 text-gray-600 hover:bg-gray-100"
-              aria-label="Menüyü aç"
-            >
-              {isMenuOpen ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+            {/* Categories Dropdown */}
+            <CategoriesDropdown />
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex shrink-0 items-center gap-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="px-4 py-2 rounded-lg text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
+            {/* Search Bar */}
+            <SearchBar className="flex-1 max-w-2xl" />
+
+            {/* Dashboard Link */}
+            <Link
+              href="/dashboard"
+              className={cn(
+                'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all',
+                'bg-muted hover:bg-primary-50 hover:text-primary',
+                'font-medium'
+              )}
+            >
+              <User className="h-5 w-5" />
+              <span className="hidden lg:inline">Dashboard</span>
+            </Link>
           </div>
 
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <nav className="md:hidden flex flex-col gap-2 pt-4 border-t border-gray-200">
-              {navigation.map((item) => (
+          {/* Mobile Layout */}
+          <div className="md:hidden">
+            {/* Top Row: Logo + Hamburger */}
+            <div className="flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-600 shadow-lg shadow-primary/30">
+                  <Text as="span" size="base" weight="bold" color="white">
+                    K
+                  </Text>
+                </div>
+                <Text as="h1" size="lg" weight="semibold">
+                  KobiWinner
+                </Text>
+              </Link>
+
+              <div className="flex items-center gap-2">
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="px-4 py-3 rounded-lg text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                  href="/dashboard"
+                  className="p-2.5 rounded-xl text-foreground hover:bg-muted transition-colors"
                 >
-                  {item.name}
+                  <User className="h-5 w-5" />
                 </Link>
-              ))}
-            </nav>
-          )}
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-2.5 rounded-xl text-foreground hover:bg-muted transition-colors"
+                  aria-label={isMobileMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-6 w-6" />
+                  ) : (
+                    <Menu className="h-6 w-6" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mt-4">
+              <SearchBar placeholder="Ara..." />
+            </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+              <nav className="mt-4 pt-4 border-t border-border animate-slide-up">
+                <CategoriesDropdown />
+              </nav>
+            )}
+          </div>
         </header>
       </div>
     </>
