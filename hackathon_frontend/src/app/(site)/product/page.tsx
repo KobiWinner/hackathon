@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 
 import { searchService } from '@/api/search';
 import type { ProductSearchResult } from '@/api/search';
-import { ProductFilter, type FilterValues } from '@/components/ProductFilter';
+import { ProductFilter, type FilterValues, type FilterOption } from '@/components/ProductFilter';
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
@@ -23,6 +23,12 @@ export default function ProductListPage() {
     const [error, setError] = useState<string | null>(null);
     const [totalProducts, setTotalProducts] = useState(0);
 
+    // Filtre seçenekleri (tüm ürünlerden çıkarılacak, değişmeyecek)
+    const [allCategories, setAllCategories] = useState<FilterOption[]>([]);
+    const [allBrands, setAllBrands] = useState<FilterOption[]>([]);
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
+    const hasLoadedFilterOptions = useRef(false);
+
     // Aktif filtreler
     const [activeFilters, setActiveFilters] = useState<FilterValues>({
         categories: [],
@@ -35,6 +41,48 @@ export default function ProductListPage() {
     // Mobilde filtre panelini aç/kapat
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+    // Tüm ürünlerden filtre seçeneklerini çıkar
+    const extractFilterOptions = useCallback((products: ProductSearchResult[]) => {
+        // Kategoriler
+        const uniqueCategories = [...new Set(products.map(p => p.category_name).filter(Boolean))];
+        const categoryOptions = uniqueCategories.map(cat => ({ value: cat!, label: cat! }));
+        categoryOptions.sort((a, b) => a.label.localeCompare(b.label, 'tr'));
+
+        // Markalar
+        const uniqueBrands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+        const brandOptions = uniqueBrands.map(brand => ({ value: brand!, label: brand! }));
+        brandOptions.sort((a, b) => a.label.localeCompare(b.label, 'tr'));
+
+        // Fiyat aralığı
+        const prices = products.map(p => p.lowest_price || 0).filter(p => p > 0);
+        const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices)) : 0;
+        const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices)) : 0;
+
+        return { categoryOptions, brandOptions, minPrice, maxPrice };
+    }, []);
+
+    // İlk yüklemede tüm filtre seçeneklerini çek
+    const fetchFilterOptions = useCallback(async (searchQuery: string) => {
+        try {
+            const result = await searchService.searchProducts({
+                q: searchQuery || '*',
+                page: 1,
+                page_size: 200, // Filtre seçenekleri için daha fazla ürün al
+                in_stock_only: false, // Stokta olmayanları da getir
+            });
+
+            if (result.success) {
+                const { categoryOptions, brandOptions, minPrice, maxPrice } = extractFilterOptions(result.data.products);
+                setAllCategories(categoryOptions);
+                setAllBrands(brandOptions);
+                setPriceRange({ min: minPrice, max: maxPrice });
+                hasLoadedFilterOptions.current = true;
+            }
+        } catch (err) {
+            console.error('Filter options fetch error:', err);
+        }
+    }, [extractFilterOptions]);
+
     // API'den ürünleri çek
     const fetchProducts = useCallback(async (searchQuery: string, filters: FilterValues) => {
         setIsLoading(true);
@@ -46,12 +94,22 @@ export default function ProductListPage() {
                 min_price: filters.minPrice ? parseFloat(filters.minPrice) : undefined,
                 max_price: filters.maxPrice ? parseFloat(filters.maxPrice) : undefined,
                 brand: filters.brands.length === 1 ? filters.brands[0] : undefined,
+                in_stock_only: false, // Stokta olmayanları da getir
                 page: 1,
                 page_size: 50,
             });
 
             if (result.success) {
                 let filteredProducts = result.data.products;
+
+                // İlk yüklemede filtre seçeneklerini de güncelle (eğer henüz yüklenmediyse)
+                if (!hasLoadedFilterOptions.current) {
+                    const { categoryOptions, brandOptions, minPrice, maxPrice } = extractFilterOptions(filteredProducts);
+                    setAllCategories(categoryOptions);
+                    setAllBrands(brandOptions);
+                    setPriceRange({ min: minPrice, max: maxPrice });
+                    hasLoadedFilterOptions.current = true;
+                }
 
                 // Frontend'de ek filtreleme (çoklu brand filtreleme)
                 if (filters.brands.length > 1) {
@@ -96,7 +154,13 @@ export default function ProductListPage() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [extractFilterOptions]);
+
+    // URL'deki query değiştiğinde filtre seçeneklerini yeniden yükle
+    useEffect(() => {
+        hasLoadedFilterOptions.current = false;
+        fetchFilterOptions(queryFromUrl);
+    }, [queryFromUrl, fetchFilterOptions]);
 
     // URL'deki query veya filtreler değiştiğinde veri çek
     useEffect(() => {
@@ -108,17 +172,6 @@ export default function ProductListPage() {
         setActiveFilters(filters);
         setIsMobileFilterOpen(false); // Mobilde filtre panelini kapat
     };
-
-    // Kategorileri ve markaları ürünlerden çıkar (dinamik)
-    const categories = useMemo(() => {
-        const uniqueCategories = [...new Set(products.map(p => p.category_name).filter(Boolean))];
-        return uniqueCategories.map(cat => ({ value: cat!, label: cat! }));
-    }, [products]);
-
-    const brands = useMemo(() => {
-        const uniqueBrands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-        return uniqueBrands.map(brand => ({ value: brand!, label: brand! }));
-    }, [products]);
 
     // Aktif filtre sayısı
     const activeFilterCount = useMemo(() => {
@@ -186,8 +239,9 @@ export default function ProductListPage() {
                             </div>
                             <div className="h-[calc(100vh-80px)] overflow-y-auto">
                                 <ProductFilter
-                                    categories={categories}
-                                    brands={brands}
+                                    categories={allCategories}
+                                    brands={allBrands}
+                                    priceRange={priceRange}
                                     onFilter={handleFilter}
                                     className="border-0 rounded-none shadow-none"
                                 />
@@ -201,8 +255,9 @@ export default function ProductListPage() {
                     {/* Left Sidebar - Desktop Only */}
                     <aside className="hidden lg:block w-72 flex-shrink-0">
                         <ProductFilter
-                            categories={categories}
-                            brands={brands}
+                            categories={allCategories}
+                            brands={allBrands}
+                            priceRange={priceRange}
                             onFilter={handleFilter}
                         />
                     </aside>
