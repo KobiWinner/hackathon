@@ -7,6 +7,9 @@ from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
 from app.infrastructure.repositories.price_history_repository import (
     PriceHistoryRepository,
 )
+from app.infrastructure.repositories.product_mapping_repository import (
+    ProductMappingRepository,
+)
 from app.infrastructure.repositories.role_repository import RoleRepository
 from app.infrastructure.repositories.user_repository import UserRepository
 from app.persistence.db.session import AsyncSessionLocal
@@ -57,6 +60,10 @@ class UnitOfWork(IUnitOfWork):
     @property
     def price_histories(self) -> PriceHistoryRepository:
         return PriceHistoryRepository(self.db)
+
+    @property
+    def product_mappings(self) -> ProductMappingRepository:
+        return ProductMappingRepository(self.db)
 
     @property
     def db(self) -> AsyncSession:
