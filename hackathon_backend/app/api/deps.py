@@ -5,9 +5,13 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.application.cqrs.commands.user_command import UserCommandService
 from app.application.services.auth_service import AuthService
+from app.application.services.price.currency_service import CurrencyService
 from app.core.infrastructure.cache import cache
+from app.core.infrastructure.exchange_rate_provider import ExchangeRateApiProvider
 from app.core.security.auth import decode_access_token
 from app.domain.i_services.i_cache_service import ICacheService
+from app.domain.i_services.i_currency_service import ICurrencyService
+from app.domain.i_services.i_exchange_rate_provider import IExchangeRateProvider
 from app.domain.schemas.auth import UserContext
 from app.infrastructure.unit_of_work import UnitOfWork
 
@@ -80,6 +84,19 @@ async def get_auth_service(uow: UnitOfWork = Depends(get_uow)) -> AuthService:
 
 async def get_cache_service() -> ICacheService:
     return cache
+
+
+async def get_exchange_rate_provider() -> IExchangeRateProvider:
+    """Exchange rate provider dependency."""
+    return ExchangeRateApiProvider()
+
+
+async def get_currency_service(
+    exchange_rate_provider: IExchangeRateProvider = Depends(get_exchange_rate_provider),
+    cache_service: ICacheService = Depends(get_cache_service),
+) -> ICurrencyService:
+    """Currency service with cache and provider injected."""
+    return CurrencyService(exchange_rate_provider, cache_service)
 
 
 async def get_user_command_service(

@@ -3,6 +3,12 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Optional, Type
 
 if TYPE_CHECKING:
+    from app.domain.i_repositories.i_price_history_repository import (
+        IPriceHistoryRepository,
+    )
+    from app.domain.i_repositories.i_product_mapping_repository import (
+        IProductMappingRepository,
+    )
     from app.domain.i_repositories.i_role_repository import IRoleRepository
     from app.domain.i_repositories.i_user_repository import IUserRepository
 
@@ -44,4 +50,14 @@ class IUnitOfWork(ABC):
     @property
     @abstractmethod
     def roles(self) -> "IRoleRepository":
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def price_histories(self) -> "IPriceHistoryRepository":
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def product_mappings(self) -> "IProductMappingRepository":
         raise NotImplementedError
