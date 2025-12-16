@@ -30,8 +30,11 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 # Uygulama kodunu kopyala
 COPY . .
 
+# Entrypoint script'ini çalıştırılabilir yap
+RUN chmod +x /app/scripts/entrypoint.sh
+
 # Konteynerin dışarıya açacağı port
 EXPOSE 8000
 
-# Başlatma komutu
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Entrypoint script ile başlat (migration + uvicorn)
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]

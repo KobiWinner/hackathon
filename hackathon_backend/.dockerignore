@@ -7,6 +7,6 @@ __pycache__/
 htmlcov/
 .coverage
 tests/
-scripts/
+scripts/create_test_db_local.py
 docker-compose.yml
 README.md
