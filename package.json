@@ -6,6 +6,10 @@
     "husky": "^9.1.7"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "npm --prefix hackathon_frontend run lint",
+    "lint:fix": "npm --prefix hackathon_frontend run lint -- --fix",
+    "test:frontend": "npm --prefix hackathon_frontend test",
+    "test:backend": "cd hackathon_backend && uv run pytest -q"
   }
 }

@@ -1,5 +1,5 @@
 
-import { ReactNode, ElementType, HTMLAttributes } from 'react';
+import type { ElementType, HTMLAttributes, ReactNode } from 'react';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(' ');

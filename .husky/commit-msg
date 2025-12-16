@@ -1,5 +1,2 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # pre-commit tool'u ile commit mesajı kontrolü
 python -m pre_commit run --hook-stage commit-msg --commit-msg-filename "$1"
