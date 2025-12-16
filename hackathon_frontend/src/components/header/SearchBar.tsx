@@ -49,7 +49,7 @@ export function SearchBar({ className, placeholder = 'Ürün, kategori veya mark
             searchService.saveRecentSearch(q);
             setRecentSearches(searchService.getRecentSearches());
             setIsFocused(false);
-            router.push(`/search?q=${encodeURIComponent(q)}`);
+            router.push(`/product?q=${encodeURIComponent(q)}`);
         } catch (error) {
             console.error('Search error:', error);
         } finally {

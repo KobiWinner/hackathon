@@ -1,100 +1,27 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
+import { Loader2 } from 'lucide-react';
+
+import { searchService } from '@/api/search';
+import type { ProductSearchResult } from '@/api/search';
 import { ProductFilter, type FilterValues } from '@/components/ProductFilter';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
-// Mock ürün verisi
-const mockProducts = [
-    {
-        id: 1,
-        name: 'iPhone 15 Pro Max 256GB',
-        brand: 'Apple',
-        image_url: 'https://picsum.photos/seed/iphone15/600/600',
-        category: 'Elektronik',
-        minPrice: 64999,
-        trendScore: 95,
-    },
-    {
-        id: 2,
-        name: 'Nike Air Max 270 React',
-        brand: 'Nike',
-        image_url: 'https://picsum.photos/seed/nike270/600/600',
-        category: 'Moda',
-        minPrice: 3199,
-        trendScore: 78,
-    },
-    {
-        id: 3,
-        name: 'Sony WH-1000XM5 Kulaklık',
-        brand: 'Sony',
-        image_url: 'https://picsum.photos/seed/sonyxm5/600/600',
-        category: 'Elektronik',
-        minPrice: 8799,
-        trendScore: 88,
-    },
-    {
-        id: 4,
-        name: 'MacBook Pro 14" M3 Pro',
-        brand: 'Apple',
-        image_url: 'https://picsum.photos/seed/macbookm3/600/600',
-        category: 'Elektronik',
-        minPrice: 73999,
-        trendScore: 92,
-    },
-    {
-        id: 5,
-        name: 'Adidas Ultraboost 22',
-        brand: 'Adidas',
-        image_url: 'https://picsum.photos/seed/adidas22/600/600',
-        category: 'Moda',
-        minPrice: 4599,
-        trendScore: 75,
-    },
-    {
-        id: 6,
-        name: 'Samsung Galaxy S24 Ultra',
-        brand: 'Samsung',
-        image_url: 'https://picsum.photos/seed/s24ultra/600/600',
-        category: 'Elektronik',
-        minPrice: 59999,
-        trendScore: 90,
-    },
-    {
-        id: 7,
-        name: 'Zara Oversize Ceket',
-        brand: 'Zara',
-        image_url: 'https://picsum.photos/seed/zarajacket/600/600',
-        category: 'Moda',
-        minPrice: 1299,
-        trendScore: 82,
-    },
-    {
-        id: 8,
-        name: 'LG OLED 55" TV',
-        brand: 'LG',
-        image_url: 'https://picsum.photos/seed/lgtv/600/600',
-        category: 'Elektronik',
-        minPrice: 42999,
-        trendScore: 87,
-    },
-];
-
-// Kategorileri ve markaları ürünlerden çıkar
-const categories = [...new Set(mockProducts.map((p) => p.category))].map((cat) => ({
-    value: cat,
-    label: cat,
-}));
-
-const brands = [...new Set(mockProducts.map((p) => p.brand))].map((brand) => ({
-    value: brand,
-    label: brand,
-}));
-
 export default function ProductListPage() {
+    const searchParams = useSearchParams();
+    const queryFromUrl = searchParams.get('q') || '';
+
+    // Ürünler ve loading state
+    const [products, setProducts] = useState<ProductSearchResult[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [totalProducts, setTotalProducts] = useState(0);
+
     // Aktif filtreler
     const [activeFilters, setActiveFilters] = useState<FilterValues>({
         categories: [],
@@ -107,63 +34,90 @@ export default function ProductListPage() {
     // Mobilde filtre panelini aç/kapat
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+    // API'den ürünleri çek
+    const fetchProducts = useCallback(async (searchQuery: string, filters: FilterValues) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await searchService.searchProducts({
+                q: searchQuery || '*', // Boş ise tüm ürünleri getir
+                min_price: filters.minPrice ? parseFloat(filters.minPrice) : undefined,
+                max_price: filters.maxPrice ? parseFloat(filters.maxPrice) : undefined,
+                brand: filters.brands.length === 1 ? filters.brands[0] : undefined,
+                page: 1,
+                page_size: 50,
+            });
+
+            if (result.success) {
+                let filteredProducts = result.data.products;
+
+                // Frontend'de ek filtreleme (çoklu brand filtreleme)
+                if (filters.brands.length > 1) {
+                    filteredProducts = filteredProducts.filter(p =>
+                        filters.brands.includes(p.brand || '')
+                    );
+                }
+
+                // Frontend'de ek filtreleme (kategori - API'de category_id var ama isim yok)
+                if (filters.categories.length > 0) {
+                    filteredProducts = filteredProducts.filter(p =>
+                        filters.categories.includes(p.category_name || '')
+                    );
+                }
+
+                // Sıralama
+                switch (filters.sortBy) {
+                    case 'price_asc':
+                        filteredProducts.sort((a, b) => (a.lowest_price || 0) - (b.lowest_price || 0));
+                        break;
+                    case 'price_desc':
+                        filteredProducts.sort((a, b) => (b.lowest_price || 0) - (a.lowest_price || 0));
+                        break;
+                    case 'name_asc':
+                        filteredProducts.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+                        break;
+                    case 'name_desc':
+                        filteredProducts.sort((a, b) => b.name.localeCompare(a.name, 'tr'));
+                        break;
+                }
+
+                setProducts(filteredProducts);
+                setTotalProducts(result.data.total);
+            } else {
+                setError('Ürünler yüklenirken bir hata oluştu.');
+                setProducts([]);
+            }
+        } catch (err) {
+            console.error('Fetch products error:', err);
+            setError('Bağlantı hatası oluştu.');
+            setProducts([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // URL'deki query veya filtreler değiştiğinde veri çek
+    useEffect(() => {
+        fetchProducts(queryFromUrl, activeFilters);
+    }, [queryFromUrl, activeFilters, fetchProducts]);
+
     // Filtreleme işlemi - "Filtrele" butonuna basıldığında çalışır
     const handleFilter = (filters: FilterValues) => {
         setActiveFilters(filters);
         setIsMobileFilterOpen(false); // Mobilde filtre panelini kapat
     };
 
-    // Filtrelenmiş ve sıralanmış ürünler
-    const filteredProducts = useMemo(() => {
-        let result = [...mockProducts];
+    // Kategorileri ve markaları ürünlerden çıkar (dinamik)
+    const categories = useMemo(() => {
+        const uniqueCategories = [...new Set(products.map(p => p.category_name).filter(Boolean))];
+        return uniqueCategories.map(cat => ({ value: cat!, label: cat! }));
+    }, [products]);
 
-        // Kategori filtresi (çoklu seçim)
-        if (activeFilters.categories.length > 0) {
-            result = result.filter((p) => activeFilters.categories.includes(p.category));
-        }
-
-        // Marka filtresi (çoklu seçim)
-        if (activeFilters.brands.length > 0) {
-            result = result.filter((p) => activeFilters.brands.includes(p.brand));
-        }
-
-        // Min fiyat filtresi
-        if (activeFilters.minPrice) {
-            const minVal = parseFloat(activeFilters.minPrice);
-            if (!isNaN(minVal)) {
-                result = result.filter((p) => p.minPrice >= minVal);
-            }
-        }
-
-        // Max fiyat filtresi
-        if (activeFilters.maxPrice) {
-            const maxVal = parseFloat(activeFilters.maxPrice);
-            if (!isNaN(maxVal)) {
-                result = result.filter((p) => p.minPrice <= maxVal);
-            }
-        }
-
-        // Sıralama
-        switch (activeFilters.sortBy) {
-            case 'price_asc':
-                result.sort((a, b) => a.minPrice - b.minPrice);
-                break;
-            case 'price_desc':
-                result.sort((a, b) => b.minPrice - a.minPrice);
-                break;
-            case 'trend':
-                result.sort((a, b) => b.trendScore - a.trendScore);
-                break;
-            case 'name_asc':
-                result.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-                break;
-            case 'name_desc':
-                result.sort((a, b) => b.name.localeCompare(a.name, 'tr'));
-                break;
-        }
-
-        return result;
-    }, [activeFilters]);
+    const brands = useMemo(() => {
+        const uniqueBrands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+        return uniqueBrands.map(brand => ({ value: brand!, label: brand! }));
+    }, [products]);
 
     // Aktif filtre sayısı
     const activeFilterCount = useMemo(() => {
@@ -181,10 +135,14 @@ export default function ProductListPage() {
             <div className="container mx-auto px-4 max-w-7xl">
                 {/* Başlık */}
                 <div className="mb-6">
-                    <Heading level={1} size="3xl">Ürünler</Heading>
+                    <Heading level={1} size="3xl">
+                        {queryFromUrl ? `"${queryFromUrl}" için sonuçlar` : 'Ürünler'}
+                    </Heading>
                     <br />
                     <Text color="muted" className="mt-2">
-                        Tüm ürünleri incele, fiyat karşılaştır ve en iyi fırsatları yakala!
+                        {queryFromUrl
+                            ? `${totalProducts} ürün bulundu`
+                            : 'Tüm ürünleri incele, fiyat karşılaştır ve en iyi fırsatları yakala!'}
                     </Text>
                 </div>
 
@@ -253,7 +211,7 @@ export default function ProductListPage() {
                         {/* Sonuç Sayısı */}
                         <div className="flex items-center justify-between mb-4 p-3 bg-card rounded-xl border border-border">
                             <Text color="muted">
-                                <span className="font-semibold text-foreground">{filteredProducts.length}</span> ürün bulundu
+                                <span className="font-semibold text-foreground">{products.length}</span> ürün bulundu
                             </Text>
                             {activeFilterCount > 0 && (
                                 <div className="flex items-center gap-2">
@@ -264,60 +222,85 @@ export default function ProductListPage() {
                             )}
                         </div>
 
+                        {/* Loading State */}
+                        {isLoading && (
+                            <div className="flex items-center justify-center py-20">
+                                <div className="text-center">
+                                    <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+                                    <Text color="muted">Ürünler yükleniyor...</Text>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error State */}
+                        {error && !isLoading && (
+                            <div className="text-center py-16">
+                                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                                    <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <Text size="lg" weight="semibold" className="mb-2">Bir hata oluştu</Text>
+                                <Text color="muted">{error}</Text>
+                            </div>
+                        )}
+
                         {/* Ürün Grid - Mobilde 2'li, tablet 2-3, desktop 3 */}
-                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-                            {filteredProducts.map((product) => (
-                                <Link
-                                    key={product.id}
-                                    href={`/product/${product.id}`}
-                                    className="block bg-card rounded-xl sm:rounded-2xl p-2 sm:p-4 border border-border hover:border-primary/50 hover:shadow-xl transition-all duration-300 group"
-                                >
-                                    {/* Ürün Resmi */}
-                                    <div className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-background mb-2 sm:mb-4">
-                                        <Image
-                                            src={product.image_url}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                        />
-                                        {/* Trend Badge */}
-                                        {product.trendScore >= 85 && (
-                                            <div className="absolute top-1 left-1 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] sm:text-xs font-semibold rounded-full flex items-center gap-0.5 sm:gap-1">
-                                                🔥 <span className="hidden sm:inline">Trend</span>
-                                            </div>
-                                        )}
-                                    </div>
+                        {!isLoading && !error && products.length > 0 && (
+                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                                {products.map((product) => (
+                                    <Link
+                                        key={product.id}
+                                        href={`/product/${product.id}`}
+                                        className="block bg-card rounded-xl sm:rounded-2xl p-2 sm:p-4 border border-border hover:border-primary/50 hover:shadow-xl transition-all duration-300 group"
+                                    >
+                                        {/* Ürün Resmi */}
+                                        <div className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-background mb-2 sm:mb-4">
+                                            <Image
+                                                src={product.image_url || `https://picsum.photos/seed/${product.id}/600/600`}
+                                                alt={product.name}
+                                                fill
+                                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                            />
+                                            {/* İndirim Badge */}
+                                            {product.discount_percentage && product.discount_percentage > 0 && (
+                                                <div className="absolute top-1 left-1 sm:top-2 sm:left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] sm:text-xs font-semibold rounded-full flex items-center gap-0.5 sm:gap-1">
+                                                    🔥 <span className="hidden sm:inline">%{product.discount_percentage}</span>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    {/* Ürün Bilgileri */}
-                                    <div>
-                                        <Caption className="text-[10px] sm:text-xs">{product.category}</Caption>
-                                        <Text size="sm" weight="semibold" maxLines={2} className="mt-0.5 sm:mt-1 mb-0.5 sm:mb-1 group-hover:text-primary transition-colors text-xs sm:text-sm">
-                                            {product.name}
-                                        </Text>
-                                        <Text size="xs" color="muted" className="hidden sm:block">{product.brand}</Text>
+                                        {/* Ürün Bilgileri */}
+                                        <div>
+                                            <Caption className="text-[10px] sm:text-xs">{product.category_name || 'Kategori'}</Caption>
+                                            <Text size="sm" weight="semibold" maxLines={2} className="mt-0.5 sm:mt-1 mb-0.5 sm:mb-1 group-hover:text-primary transition-colors text-xs sm:text-sm">
+                                                {product.name}
+                                            </Text>
+                                            <Text size="xs" color="muted" className="hidden sm:block">{product.brand}</Text>
 
-                                        {/* Fiyat */}
-                                        <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border flex items-center justify-between">
-                                            <div>
-                                                <Caption className="hidden sm:block">En düşük fiyat</Caption>
-                                                <Text size="sm" weight="bold" color="primary" className="sm:text-lg">
-                                                    ₺{product.minPrice.toLocaleString()}
-                                                </Text>
-                                            </div>
-                                            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                </svg>
+                                            {/* Fiyat */}
+                                            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border flex items-center justify-between">
+                                                <div>
+                                                    <Caption className="hidden sm:block">En düşük fiyat</Caption>
+                                                    <Text size="sm" weight="bold" color="primary" className="sm:text-lg">
+                                                        ₺{(product.lowest_price || 0).toLocaleString('tr-TR')}
+                                                    </Text>
+                                                </div>
+                                                <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Boş sonuç durumu */}
-                        {filteredProducts.length === 0 && (
+                        {!isLoading && !error && products.length === 0 && (
                             <div className="text-center py-16">
                                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
                                     <svg className="w-10 h-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -325,7 +308,11 @@ export default function ProductListPage() {
                                     </svg>
                                 </div>
                                 <Text size="lg" weight="semibold" className="mb-2">Ürün bulunamadı</Text>
-                                <Text color="muted">Filtre kriterlerinize uygun ürün bulunamadı. Farklı filtreler deneyin.</Text>
+                                <Text color="muted">
+                                    {queryFromUrl
+                                        ? `"${queryFromUrl}" için sonuç bulunamadı. Farklı bir arama deneyin.`
+                                        : 'Filtre kriterlerinize uygun ürün bulunamadı. Farklı filtreler deneyin.'}
+                                </Text>
                             </div>
                         )}
                     </div>
