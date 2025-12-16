@@ -166,5 +166,4 @@ export default function ArdovskiPage() {
         </div>
     );
 }
-);
-}
+
