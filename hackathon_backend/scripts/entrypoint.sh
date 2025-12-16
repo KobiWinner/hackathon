@@ -5,26 +5,37 @@ echo "=========================================="
 echo "  🚀 Starting Application Setup"
 echo "=========================================="
 
-# Veritabanı bağlantısını bekle
+# Veritabanı bağlantısını bekle (basit TCP kontrolü)
 echo "⏳ Waiting for database to be ready..."
 while ! python -c "
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
-from app.core.config.settings import get_settings
+import socket
+import os
 
-async def check_db():
-    settings = get_settings()
-    engine = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI))
-    async with engine.connect() as conn:
-        await conn.execute('SELECT 1')
-    await engine.dispose()
+host = os.environ.get('POSTGRES_SERVER', 'db')
+port = int(os.environ.get('POSTGRES_PORT', 5432))
 
-asyncio.run(check_db())
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(2)
+result = sock.connect_ex((host, port))
+sock.close()
+exit(0 if result == 0 else 1)
 " 2>/dev/null; do
     echo "  Database not ready, waiting 2 seconds..."
     sleep 2
 done
+
+# Ekstra bekleme - PostgreSQL'in tam hazır olması için
+sleep 3
 echo "✅ Database is ready!"
+
+# Alembic migration oluştur (sadece development'ta)
+echo ""
+if [ "$AUTO_GENERATE_MIGRATIONS" = "true" ]; then
+    echo "🔄 Generating new migrations (development mode)..."
+    alembic revision --autogenerate -m "auto_migration_$(date +%Y%m%d_%H%M%S)" 2>/dev/null || echo "  ℹ️  No new migrations needed or already up to date"
+else
+    echo "ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable."
+fi
 
 # Alembic migration çalıştır
 echo ""

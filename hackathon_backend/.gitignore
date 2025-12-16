@@ -5,6 +5,14 @@ logs
 **/*.backup.*
 **/*.back.*
 
+# Duplicate files (from cloud sync or merge conflicts)
+*\ 2.*
+*\ 2
+*\ 3.*
+*\ 3
+*(copy).*
+*(Copy).*
+
 node_modules
 bower_components
 
