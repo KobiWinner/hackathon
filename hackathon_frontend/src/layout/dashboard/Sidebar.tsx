@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -163,9 +164,13 @@ export function DashboardSidebar({ isCollapsed, onClose: _onClose }: SidebarProp
 
       {/* Logo / Brand Area - Fixed height, no shrink */}
       <div className="relative flex h-22 shrink-0 items-center gap-3 border-b border-header-border">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-600 shadow-lg shadow-primary/30">
-          <Sparkles className="h-6 w-6 text-white" aria-hidden="true" />
-        </div>
+        <Image
+          src="/favicon.ico"
+          alt="Logo"
+          width={40}
+          height={40}
+          className="shrink-0"
+        />
         <div
           className={cn(
             "min-w-0 overflow-hidden transition-all duration-300",
@@ -175,7 +180,6 @@ export function DashboardSidebar({ isCollapsed, onClose: _onClose }: SidebarProp
           <h2 className="truncate bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-fluid-base font-bold text-transparent">
             Dashboard
           </h2>
-          <p className="truncate text-fluid-xs text-muted-foreground">Acme Inc.</p>
         </div>
       </div>
 

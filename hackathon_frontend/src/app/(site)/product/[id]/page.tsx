@@ -322,43 +322,6 @@ export default function ProductDetailPage() {
                         </table>
                     </div>
                 </div>
-
-                {/* Diğer Ürünler */}
-                <div className="mt-8">
-                    <Heading level={2} size="xl" className="mb-4">Diğer Ürünler</Heading>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {mockProducts
-                            .filter(p => p.id !== productId)
-                            .slice(0, 3)
-                            .map((otherProduct) => {
-                                const minPrice = Math.min(...otherProduct.prices.map(p => p.price));
-                                return (
-                                    <Link
-                                        key={otherProduct.id}
-                                        href={`/product/${otherProduct.id}`}
-                                        className="block bg-card rounded-xl p-4 border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-200 group"
-                                    >
-                                        <div className="relative aspect-square rounded-lg overflow-hidden bg-background mb-3">
-                                            <Image
-                                                src={otherProduct.image_url}
-                                                alt={otherProduct.name}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                                sizes="(max-width: 768px) 100vw, 33vw"
-                                            />
-                                        </div>
-                                        <Text size="sm" weight="semibold" maxLines={2} className="mb-1">
-                                            {otherProduct.name}
-                                        </Text>
-                                        <Caption>{otherProduct.brand}</Caption>
-                                        <Text weight="bold" color="primary" className="mt-2">
-                                            ₺{minPrice.toLocaleString()}
-                                        </Text>
-                                    </Link>
-                                );
-                            })}
-                    </div>
-                </div>
             </div>
         </div>
     );

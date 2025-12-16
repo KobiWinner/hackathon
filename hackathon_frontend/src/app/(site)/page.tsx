@@ -29,16 +29,16 @@ export default function HomePage() {
         {/* Fiyatı Düşenler */}
         <section className="mb-12">
           <ProductSection
-            title="🔥 Fiyatı Düşenler"
+            title="Fiyatı Düşenler"
             products={priceDropProducts}
             viewAllHref="/fiyat-dusuler"
           />
         </section>
 
-        {/* Popüler Ürünler (En çok satıcısı olan) */}
+        {/* Popüler Ürünler (En trend olan) */}
         <section className="mb-12">
           <ProductSection
-            title="📊 En Çok Karşılaştırılanlar"
+            title="En Trend Ürünler"
             products={popularProducts}
             viewAllHref="/populer"
           />
@@ -64,49 +64,10 @@ export default function HomePage() {
         {/* En Düşük Fiyatlılar */}
         <section className="mb-12">
           <ProductSection
-            title="💰 En Uygun Fiyatlar"
+            title="En Uygun Fiyatlar"
             products={lowestPriceProducts}
             viewAllHref="/en-ucuz"
           />
-        </section>
-
-        {/* Info Cards */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 bg-gradient-to-br from-primary-50 to-white rounded-2xl border border-primary/10">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-2xl">�</span>
-              </div>
-              <Text as="h3" size="lg" weight="semibold" className="mb-2">
-                Anlık Fiyat Takibi
-              </Text>
-              <Text size="sm" color="muted">
-                Binlerce satıcıdan fiyatları otomatik takip ediyoruz.
-              </Text>
-            </div>
-            <div className="p-6 bg-gradient-to-br from-secondary-50 to-white rounded-2xl border border-secondary/10">
-              <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-2xl">�</span>
-              </div>
-              <Text as="h3" size="lg" weight="semibold" className="mb-2">
-                Fiyat Geçmişi
-              </Text>
-              <Text size="sm" color="muted">
-                Geçmiş fiyatları görün, en iyi zamanı yakalayın.
-              </Text>
-            </div>
-            <div className="p-6 bg-gradient-to-br from-accent-50 to-white rounded-2xl border border-accent/10">
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-2xl">🔔</span>
-              </div>
-              <Text as="h3" size="lg" weight="semibold" className="mb-2">
-                Fiyat Alarmı
-              </Text>
-              <Text size="sm" color="muted">
-                Hedef fiyata ulaşınca anında bildirim alın.
-              </Text>
-            </div>
-          </div>
         </section>
       </Container>
     </main>

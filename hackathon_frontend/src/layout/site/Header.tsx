@@ -36,11 +36,6 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
           <div className="hidden md:flex items-center gap-6">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 shrink-0">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-600 shadow-lg shadow-primary/30">
-                <Text as="span" size="base" weight="bold" color="white">
-                  K
-                </Text>
-              </div>
               <Text as="h1" size="xl" weight="semibold" className="hidden lg:block">
                 KobiWinner
               </Text>
@@ -71,11 +66,6 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
             {/* Top Row: Logo + Hamburger */}
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-600 shadow-lg shadow-primary/30">
-                  <Text as="span" size="base" weight="bold" color="white">
-                    K
-                  </Text>
-                </div>
                 <Text as="h1" size="lg" weight="semibold">
                   KobiWinner
                 </Text>
