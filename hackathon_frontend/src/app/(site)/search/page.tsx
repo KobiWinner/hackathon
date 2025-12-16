@@ -8,6 +8,7 @@ import { Loader2, Search, SlidersHorizontal, X } from 'lucide-react';
 
 import { searchService, type ProductSearchResult, type ProductSearchResponse } from '@/api/search';
 import { Button } from '@/components/ui/buttons/Button';
+import { Container } from '@/components/ui/Container';
 import { Skeleton } from '@/components/ui/feedback/Skeleton';
 import { Heading, Text } from '@/components/ui/typography/Text';
 import { cn } from '@/lib/cn';
@@ -279,8 +280,8 @@ function SearchContent() {
 // Ana sayfa componenti
 export default function SearchPage() {
     return (
-        <div className="pt-24 pb-12 min-h-screen">
-            <div className="max-w-7xl mx-auto px-4 lg:px-8">
+        <div className="pb-12 min-h-screen">
+            <Container>
                 <Suspense fallback={
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -288,7 +289,7 @@ export default function SearchPage() {
                 }>
                     <SearchContent />
                 </Suspense>
-            </div>
+            </Container>
         </div>
     );
 }

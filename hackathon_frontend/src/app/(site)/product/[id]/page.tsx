@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/buttons/Button';
+import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
 // Mock ürün verisi - gerçek projede API'den gelecek
@@ -138,8 +139,9 @@ export default function ProductDetailPage() {
 
     return (
         <div className="min-h-screen bg-background py-8">
-            <div className="container mx-auto px-4 max-w-6xl">
+            <Container size="lg">
                 {/* Breadcrumb */}
+
                 <nav className="mb-6">
                     <div className="flex items-center gap-2 text-sm">
                         <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Ana Sayfa</Link>
@@ -322,7 +324,7 @@ export default function ProductDetailPage() {
                         </table>
                     </div>
                 </div>
-            </div>
+            </Container>
         </div>
     );
 }
