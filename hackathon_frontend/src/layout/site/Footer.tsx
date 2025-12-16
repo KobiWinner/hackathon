@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { Container } from "@/components/ui/Container";
 import { Text } from "@/components/ui/typography/Text";
 import {
   type SocialLink,
