@@ -6,7 +6,7 @@ export function SiteFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="flex flex-col gap-4 border-t border-gray-200 pt-6 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
+    <footer className="flex flex-col gap-4 pt-6 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 text-sm font-bold text-white">
           K
