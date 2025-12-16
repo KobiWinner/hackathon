@@ -1,8 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect } from 'react';
+
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { cn } from '@/lib/cn';
 

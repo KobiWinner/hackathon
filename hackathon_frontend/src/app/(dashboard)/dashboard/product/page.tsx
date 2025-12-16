@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/buttons/Button';
-import { DataTable, type Column } from '@/components/ui/DataTable';
+import { type Column, DataTable } from '@/components/ui/DataTable';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import { Text, Heading } from '@/components/ui/typography/Text';
+import { Heading, Text } from '@/components/ui/typography/Text';
 
 // ==========================================
 // TİP TANIMLARI (Type Definitions)
@@ -154,7 +156,7 @@ export default function ProductPage() {
      * Kategori ID'sinden kategori adını bulur
      */
     const getCategoryName = (categoryId: number | null): string => {
-        if (!categoryId) return '-';
+        if (!categoryId) { return '-'; }
         const category = MOCK_CATEGORIES.find((c) => c.id === categoryId);
         return category?.name ?? '-';
     };
@@ -283,7 +285,7 @@ export default function ProductPage() {
      * Form gönderildiğinde çalışır (Kaydet butonu)
      */
     const handleSubmit = () => {
-        if (!validateForm()) return;
+        if (!validateForm()) { return; }
 
         if (editingProduct) {
             // DÜZENLEME: Mevcut ürünü güncelle
@@ -330,7 +332,7 @@ export default function ProductPage() {
      * Ürün silme işlemi
      */
     const handleDelete = () => {
-        if (!deletingProduct) return;
+        if (!deletingProduct) { return; }
         setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
         closeDeleteModal();
     };
@@ -354,7 +356,7 @@ export default function ProductPage() {
             width: '80px',
             render: (value) =>
                 value ? (
-                    <img
+                    <Image
                         src={value as string}
                         alt="Ürün"
                         className="h-10 w-10 rounded-lg object-cover"
