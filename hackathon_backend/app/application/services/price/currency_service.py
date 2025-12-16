@@ -1,63 +1,54 @@
-import httpx
-from typing import Dict
+"""
+Currency Service - Application Layer.
+Döviz kuru işlemlerini yönetir, cache ve provider ile çalışır.
+"""
 
-from app.core.config.settings import settings
+from typing import Dict, Optional
+
+from app.domain.i_services.i_cache_service import ICacheService
 from app.domain.i_services.i_currency_service import ICurrencyService
+from app.domain.i_services.i_exchange_rate_provider import IExchangeRateProvider
 
 
 class CurrencyService(ICurrencyService):
     """
     Döviz kurlarını yöneten servis.
+    Cache desteği ile API çağrılarını optimize eder.
     """
-    FALLBACK_RATES = {
-        "USD": 34.20,
-        "EUR": 37.50,
-        "GBP": 43.10,
-        "TRY": 1.0
-    }
+
+    CACHE_KEY = "exchange_rates"
+    CACHE_TTL = 300  # 5 dakika
+
+    def __init__(
+        self,
+        exchange_rate_provider: IExchangeRateProvider,
+        cache_service: Optional[ICacheService] = None,
+    ) -> None:
+        self.exchange_rate_provider = exchange_rate_provider
+        self.cache_service = cache_service
 
     async def get_exchange_rates(self) -> Dict[str, float]:
         """
-        Güncel kurları API'den veya bir hata durumunda fallback değerlerden getirir.
+        Güncel kurları cache'ten veya provider'dan getirir.
         Dönen değerler: 1 Birim Yabancı Para = Kaç TRY (Örn: USD: 34.20)
         """
-        # TODO: Redis cache eklenmeli.
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    settings.EXCHANGE_RATE_API,
-                    timeout=3.0
-                )
-                response.raise_for_status()
-                data = response.json()
+        # 1. Cache kontrol
+        if self.cache_service:
+            cached_rates = await self.cache_service.get(self.CACHE_KEY)
+            if cached_rates:
+                return cached_rates
 
-                rates = data.get("rates", {})
-                
-                # Eğer API yanıtında TRY varsa, çapraz kur hesabı yapabiliriz.
-                if "TRY" in rates:
-                    base_rate_try = rates["TRY"] # Örn: 1 Base (EUR) = 34 TRY
-                    
-                    converted_rates = {}
-                    for currency, rate in rates.items():
-                        if rate == 0: continue
-                        # Formül: (Base -> TRY) / (Base -> Currency) = Currency -> TRY
-                        # Örn: 34 (TRY/EUR) / 1.1 (USD/EUR) = 30.9 (TRY/USD)
-                        converted_rates[currency] = base_rate_try / rate
-                    
-                    converted_rates["TRY"] = 1.0
-                    return converted_rates
-                else:
-                    # TRY yoksa veya yapı farklıysa fallback dön
-                    return self.FALLBACK_RATES
+        # 2. Provider'dan çek
+        rates = await self.exchange_rate_provider.get_rates()
 
-        except (httpx.HTTPStatusError, httpx.RequestError, KeyError, ZeroDivisionError) as e:
-            print(f"Döviz kuru API hatası: {e}")
-            return self.FALLBACK_RATES
+        # 3. Cache'e kaydet
+        if self.cache_service:
+            await self.cache_service.set(self.CACHE_KEY, rates, expire=self.CACHE_TTL)
+
+        return rates
 
     async def convert_price(self, amount: float, currency: str) -> float:
-        """
-        Verilen parayı TL'ye çevirir.
-        """
+        """Verilen parayı TL'ye çevirir."""
         currency_upper = currency.upper()
         if currency_upper == "TRY":
             return amount
@@ -69,5 +60,4 @@ class CurrencyService(ICurrencyService):
             print(f"Uyarı: {currency_upper} için kur bulunamadı.")
             return amount
 
-        # Artık rate "1 Birim Para = X TL" formatında olduğu için çarpma işlemi doğru.
         return round(amount * rate, 2)

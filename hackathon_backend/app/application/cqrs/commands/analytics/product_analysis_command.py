@@ -1,6 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from app.application.pipelines.analytics.product_analysis_pipeline import ProductAnalysisPipeline
+from app.application.pipelines.analytics.product_analysis_pipeline import (
+    ProductAnalysisPipeline,
+)
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
 from app.domain.i_services.i_currency_service import ICurrencyService
 
@@ -14,19 +16,36 @@ class ProductAnalysisCommandService:
         self.uow = uow
         self.currency_service = currency_service
 
-    async def analyze_product(self, product_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def analyze_products_batch(
+        self, products: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
-        Gelen ham ürün verisini analiz pipeline'ı üzerinden işler.
-        Hata durumunda None döner.
+        Batch ürün verisini analiz pipeline'ı üzerinden işler.
+
+        Returns:
+            Dict containing:
+            - normalized_products: List of successfully processed products
+            - errors: List of error messages
+            - meta: Processing statistics
         """
         async with self.uow:
             pipeline = ProductAnalysisPipeline(self.uow, self.currency_service)
-            context = await pipeline.execute(data=product_data)
+            context = await pipeline.execute(data=products)
 
-            if not context.is_valid:
-                # Hata varsa, logla ve None dön.
-                print(f"Pipeline errors: {context.errors}")
-                return None
+            return {
+                "normalized_products": context.result or [],
+                "errors": context.errors,
+                "meta": context.meta,
+            }
 
-            # Başarılı ise context'in sonucunu (işlenmiş veri) döndür.
-            return context.result
+    async def analyze_product(
+        self, product_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Tek bir ürünü analiz eder (geriye uyumluluk için).
+        """
+        result = await self.analyze_products_batch([product_data])
+
+        if result["normalized_products"]:
+            return result["normalized_products"][0]
+        return None
