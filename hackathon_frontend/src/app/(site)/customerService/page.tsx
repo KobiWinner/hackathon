@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 import { Button } from '@/components/ui/buttons/Button';
 import { Input } from '@/components/ui/Input';
-import { Text, Heading } from '@/components/ui/typography/Text';
 import { ScrollArea } from '@/components/ui/ScrollArea';
+import { Heading, Text } from '@/components/ui/typography/Text';
 
 // Mesaj tipi
 type Message = {
@@ -39,7 +40,7 @@ export default function CustomerSupportPage() {
 
     // Mesaj gönder
     const sendMessage = () => {
-        if (!inputValue.trim()) return;
+        if (!inputValue.trim()) {return;}
 
         const now = new Date();
         const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
