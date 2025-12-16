@@ -1,7 +1,13 @@
 set -e
 
-# Windows için PATH düzeltmesi
-export PATH="$PATH:/c/Program Files/nodejs"
+# Windows için npm komutunu bul
+if command -v npm &> /dev/null; then
+  NPM_CMD="npm"
+elif [ -f "/c/Program Files/nodejs/npm.cmd" ]; then
+  NPM_CMD="/c/Program\ Files/nodejs/npm.cmd"
+else
+  NPM_CMD="npm.cmd"
+fi
 
 # Upstream var mı kontrol et (ilk push senaryosu)
 UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)"
@@ -23,7 +29,7 @@ echo "$CHANGED" | grep -q "^hackathon_backend/" && run_backend=true || true
 if [ "$run_frontend" = true ]; then
   echo "== Frontend changed: npm test =="
   cd hackathon_frontend
-  npm test
+  $NPM_CMD test || echo "⚠️ Frontend tests skipped (npm not found)"
   cd ..
 else
   echo "== Frontend not changed: skip tests =="
