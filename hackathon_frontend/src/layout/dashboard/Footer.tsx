@@ -57,7 +57,7 @@ export function DashboardFooter() {
         {/* Left Section - Copyright & Made with love */}
         <div className="flex flex-col gap-1 text-fluid-xs text-muted-foreground xs:gap-2 sm:flex-row sm:items-center sm:gap-3 md:gap-4">
           <p className="flex items-center gap-1 xs:gap-2">
-            <span className="font-medium text-foreground/80">© {currentYear} Acme Inc.</span>
+            <span className="font-medium text-foreground/80">© {currentYear} KOBİ</span>
             <span className="hidden text-muted-foreground/50 sm:inline">•</span>
             <span className="hidden text-muted-foreground sm:inline">Tüm hakları saklıdır</span>
           </p>

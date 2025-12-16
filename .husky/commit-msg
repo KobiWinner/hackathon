@@ -1,2 +1,2 @@
 # pre-commit tool'u ile commit mesajı kontrolü
-python -m pre_commit run --hook-stage commit-msg --commit-msg-filename "$1"
+py -m pre_commit run --hook-stage commit-msg --commit-msg-filename "$1"
