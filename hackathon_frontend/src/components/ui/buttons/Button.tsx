@@ -8,11 +8,10 @@ import type {
 
 import { motion } from "framer-motion";
 
-import { Text, type TextColor } from "../typography/Text";
+import { Text, type TextColor } from "@/components/ui/typography/Text";
 
-function cn(...classes: (string | undefined | null | false)[]) {
-    return classes.filter(Boolean).join(' ');
-}
+import { cn } from "@/lib/cn";
+
 
 type ButtonVariant = "solid" | "ghost" | "gradient" | "outline" | "secondary" | "white";
 type ButtonSize = "xs" | "sm" | "md" | "lg";
@@ -170,15 +169,21 @@ export function Button({
         transition: { type: "spring" as const, stiffness: 400, damping: 17 },
     };
 
+    // Framer Motion'ın kendi drag/animation event'leri ile HTML native eventleri çakışıyor
+    // Bu yüzden çakışan prop'ları filtreliyoruz
+    const conflictingMotionProps = ['onDrag', 'onDragStart', 'onDragEnd', 'onAnimationStart', 'onAnimationEnd'] as const;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filterConflictingProps = <T extends Record<string, any>>(obj: T): Omit<T, typeof conflictingMotionProps[number]> => {
+        const result = { ...obj };
+        for (const key of conflictingMotionProps) {
+            delete result[key];
+        }
+        return result;
+    };
+
     if (as === "a") {
-        const {
-            onDrag: _onDrag,
-            onDragStart: _onDragStart,
-            onDragEnd: _onDragEnd,
-            onAnimationStart: _onAnimationStart,
-            onAnimationEnd: _onAnimationEnd,
-            ...anchorProps
-        } = props as AnchorHTMLAttributes<HTMLAnchorElement>;
+        const anchorProps = filterConflictingProps(props as AnchorHTMLAttributes<HTMLAnchorElement>);
         return (
             <motion.a
                 className={combinedClassName}
@@ -190,16 +195,8 @@ export function Button({
         );
     }
 
-    const {
-        type = "button",
-        disabled,
-        onDrag: _onDrag2,
-        onDragStart: _onDragStart2,
-        onDragEnd: _onDragEnd2,
-        onAnimationStart: _onAnimationStart2,
-        onAnimationEnd: _onAnimationEnd2,
-        ...buttonProps
-    } = props as ButtonHTMLAttributes<HTMLButtonElement>;
+    const { type = "button", disabled, ...restButtonProps } = props as ButtonHTMLAttributes<HTMLButtonElement>;
+    const buttonProps = filterConflictingProps(restButtonProps);
 
     return (
         <motion.button
