@@ -1,3 +1,12 @@
-# Import all models here so Alembic can detect them
 from app.persistence.models.role import Role  # noqa: F401
 from app.persistence.models.user import User  # noqa: F401
+from app.persistence.models.chat.conversation import Conversation # noqa: F401
+from app.persistence.models.chat.message import Message # noqa: F401
+from app.persistence.models.products.category import Category # noqa: F401
+from app.persistence.models.products.product import Product # noqa: F401
+from app.persistence.models.products.product_variant import ProductVariant # noqa: F401
+from app.persistence.models.products.product_mappings import ProductMapping # noqa: F401
+from app.persistence.models.providers.provider import Provider # noqa: F401
+from app.persistence.models.price.currency import Currency # noqa: F401
+from app.persistence.models.price.price_history import PriceHistory # noqa: F401
+from app.persistence.models.price.price_tier import PriceTier # noqa: F401
