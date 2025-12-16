@@ -1,0 +1,31 @@
+# Tüm text dosyalarını LF olarak normalize et
+* text=auto eol=lf
+
+# Belirli dosya türleri
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
+
+# Windows batch dosyaları CRLF kalsın
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary dosyalar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
