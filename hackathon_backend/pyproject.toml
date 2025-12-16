@@ -23,6 +23,7 @@ dependencies = [
     "structlog>=25.5.0",
     "uvicorn[standard]",
     "password-validator>=1.0",
+    "elasticsearch[async]>=8.0.0",
 ]
 
 [dependency-groups]

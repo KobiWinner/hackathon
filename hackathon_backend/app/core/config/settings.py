@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     # Virgülle ayrılmış origin listesi (örn: "http://localhost:3000,http://example.com")
     # Boş bırakılırsa varsayılan olarak localhost:3000 kullanılır
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # --- EXCHANGE RATE API ---
+    EXCHANGE_RATE_API: str
+    # --- Elasticsearch Ayarları ---
+    # Elastic Cloud için cloud_id ve api_key kullanılır
+    # Self-hosted için ELASTICSEARCH_URL kullanılır
+    ELASTICSEARCH_API_KEY: str = ""
+    ELASTICSEARCH_URL: str = ""
+    ELASTICSEARCH_INDEX_PREFIX: str = "hackathon"
 
     @computed_field  # type: ignore[prop-decorator]
     @property

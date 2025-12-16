@@ -27,10 +27,12 @@ export function useScroll(options: UseScrollOptions = {}): UseScrollReturn {
     const { threshold = 10 } = options;
 
     // Use refs to track values without triggering re-renders
-    const lastScrollYRef = useRef(typeof window !== 'undefined' ? window.scrollY : 0);
+    // Initial value always 0 to prevent hydration mismatch
+    const lastScrollYRef = useRef(0);
 
+    // Initial state always 0 for SSR/hydration consistency
     const [scrollState, setScrollState] = useState({
-        scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
+        scrollY: 0,
         scrollDirection: null as 'up' | 'down' | null,
     });
 
@@ -57,6 +59,13 @@ export function useScroll(options: UseScrollOptions = {}): UseScrollReturn {
     }, []);
 
     useEffect(() => {
+        // Sync initial scroll position on mount via the handler
+        // Wrapped in requestAnimationFrame to make setState async (required by eslint)
+        lastScrollYRef.current = window.scrollY;
+        requestAnimationFrame(() => {
+            handleScroll();
+        });
+
         // Throttled scroll handler using requestAnimationFrame
         let ticking = false;
         const onScroll = () => {
