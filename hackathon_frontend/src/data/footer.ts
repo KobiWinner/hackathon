@@ -26,44 +26,45 @@ export type FooterContact = {
 };
 
 // Ana navigasyon bölümleri
+// NOT: Henüz oluşturulmamış sayfalar # ile işaretlenmiştir
 export const footerSections: FooterSection[] = [
     {
         title: "Ürünler",
         links: [
-            { label: "Tüm Ürünler", href: "/products" },
-            { label: "Kategoriler", href: "/categories" },
-            { label: "Kampanyalar", href: "/campaigns" },
-            { label: "Yeni Gelenler", href: "/products?sort=newest" },
-            { label: "En Çok Satanlar", href: "/products?sort=bestseller" },
+            { label: "Tüm Ürünler", href: "/search?q=" },
+            { label: "Kategoriler", href: "#" },
+            { label: "Kampanyalar", href: "#" },
+            { label: "Yeni Gelenler", href: "/search?q=&sort=newest" },
+            { label: "En Çok Satanlar", href: "/search?q=&sort=bestseller" },
         ],
     },
     {
         title: "Kurumsal",
         links: [
-            { label: "Hakkımızda", href: "/about" },
-            { label: "Kariyer", href: "/careers" },
-            { label: "Basın", href: "/press" },
-            { label: "Blog", href: "/blog" },
-            { label: "İletişim", href: "/contact" },
+            { label: "Hakkımızda", href: "#" },
+            { label: "Kariyer", href: "#" },
+            { label: "Basın", href: "#" },
+            { label: "Blog", href: "#" },
+            { label: "İletişim", href: "#" },
         ],
     },
     {
         title: "Destek",
         links: [
-            { label: "Yardım Merkezi", href: "/help" },
-            { label: "Sıkça Sorulan Sorular", href: "/faq" },
-            { label: "Kargo Takibi", href: "/tracking" },
-            { label: "İade & Değişim", href: "/returns" },
-            { label: "Güvenli Ödeme", href: "/secure-payment" },
+            { label: "Yardım Merkezi", href: "#" },
+            { label: "Sıkça Sorulan Sorular", href: "#" },
+            { label: "Kargo Takibi", href: "#" },
+            { label: "İade & Değişim", href: "#" },
+            { label: "Güvenli Ödeme", href: "#" },
         ],
     },
     {
         title: "Yasal",
         links: [
-            { label: "Kullanım Koşulları", href: "/terms" },
-            { label: "Gizlilik Politikası", href: "/privacy" },
-            { label: "Çerez Politikası", href: "/cookies" },
-            { label: "KVKK Aydınlatma Metni", href: "/kvkk" },
+            { label: "Kullanım Koşulları", href: "#" },
+            { label: "Gizlilik Politikası", href: "#" },
+            { label: "Çerez Politikası", href: "#" },
+            { label: "KVKK Aydınlatma Metni", href: "#" },
         ],
     },
 ];

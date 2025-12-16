@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { searchService } from '@/api/search';
-import type { SearchOptions, SearchResponse, SearchResult, SearchSuggestion } from '@/api/search';
+import type { ProductSearchResult, ProductSearchParams } from '@/api/search';
 
 type UseElasticSearchOptions = {
     /** Debounce süresi (ms) */
@@ -11,7 +11,7 @@ type UseElasticSearchOptions = {
     /** Minimum karakter sayısı */
     minChars?: number;
     /** Arama seçenekleri */
-    searchOptions?: SearchOptions;
+    searchOptions?: Omit<ProductSearchParams, 'q'>;
     /** Otomatik arama */
     autoSearch?: boolean;
 };
@@ -22,19 +22,19 @@ type UseElasticSearchReturn = {
     /** Arama terimini güncelle */
     setQuery: (query: string) => void;
     /** Arama sonuçları */
-    results: SearchResult[];
-    /** Autocomplete önerileri */
-    suggestions: SearchSuggestion[];
+    results: ProductSearchResult[];
     /** Son aramalar */
     recentSearches: string[];
     /** Yükleniyor durumu */
     isLoading: boolean;
-    /** Hata */
-    error: Error | null;
+    /** Hata mesajı */
+    error: string | null;
     /** Toplam sonuç sayısı */
     total: number;
-    /** Elasticsearch yanıt süresi (ms) */
-    took: number;
+    /** Mevcut sayfa */
+    page: number;
+    /** Toplam sayfa sayısı */
+    totalPages: number;
     /** Aramayı manuel tetikle */
     search: (query?: string) => Promise<void>;
     /** Temizle */
@@ -56,16 +56,16 @@ export function useElasticSearch(
     } = options;
 
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<SearchResult[]>([]);
-    const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+    const [results, setResults] = useState<ProductSearchResult[]>([]);
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [total, setTotal] = useState(0);
-    const [took, setTook] = useState(0);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
 
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-    const abortControllerRef = useRef<AbortController>();
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Son aramaları yükle
     useEffect(() => {
@@ -78,8 +78,8 @@ export function useElasticSearch(
 
         if (q.length < minChars) {
             setResults([]);
-            setSuggestions([]);
             setTotal(0);
+            setTotalPages(0);
             return;
         }
 
@@ -93,15 +93,24 @@ export function useElasticSearch(
         setError(null);
 
         try {
-            const response: SearchResponse = await searchService.search(q, searchOptions);
+            const response = await searchService.searchProducts({
+                q,
+                ...searchOptions,
+            });
 
-            setResults(response.results);
-            setSuggestions(response.suggestions);
-            setTotal(response.total);
-            setTook(response.took);
+            if (response.success) {
+                setResults(response.data.products);
+                setTotal(response.data.total);
+                setPage(response.data.page);
+                setTotalPages(response.data.total_pages);
+            } else {
+                setError(response.error.message);
+                setResults([]);
+                setTotal(0);
+            }
         } catch (err) {
             if (err instanceof Error && err.name !== 'AbortError') {
-                setError(err);
+                setError(err.message);
             }
         } finally {
             setIsLoading(false);
@@ -110,7 +119,7 @@ export function useElasticSearch(
 
     // Debounced arama
     useEffect(() => {
-        if (!autoSearch) {return;}
+        if (!autoSearch) { return; }
 
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
@@ -122,8 +131,8 @@ export function useElasticSearch(
             }, debounceMs);
         } else {
             setResults([]);
-            setSuggestions([]);
             setTotal(0);
+            setTotalPages(0);
         }
 
         return () => {
@@ -137,9 +146,9 @@ export function useElasticSearch(
     const clear = useCallback(() => {
         setQuery('');
         setResults([]);
-        setSuggestions([]);
         setTotal(0);
-        setTook(0);
+        setPage(1);
+        setTotalPages(0);
         setError(null);
     }, []);
 
@@ -159,12 +168,12 @@ export function useElasticSearch(
         query,
         setQuery,
         results,
-        suggestions,
         recentSearches,
         isLoading,
         error,
         total,
-        took,
+        page,
+        totalPages,
         search,
         clear,
         saveToRecent,

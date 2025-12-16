@@ -1,123 +1,190 @@
-// Elasticsearch arama servisi (mock implementation)
+/**
+ * Elasticsearch Product Search Service
+ * Backend /api/v1/search endpoint'ine bağlanır
+ */
 
-import type { SearchOptions, SearchResponse, SearchResult, SearchSuggestion } from './types';
+import { httpClient } from "../httpClient";
+import { normalizeAxiosError, type ApiError } from "../types";
 
-// Mock ürün verileri
-const mockProducts: SearchResult[] = [
-    {
-        id: '1',
-        title: 'iPhone 15 Pro Max 256GB',
-        category: 'Telefon',
-        categorySlug: 'telefon',
-        price: 64999,
-        originalPrice: 69999,
-        image: 'https://picsum.photos/seed/iphone15/200/200',
-        rating: 4.8,
-        reviewCount: 1250,
-    },
-    {
-        id: '2',
-        title: 'Samsung Galaxy S24 Ultra',
-        category: 'Telefon',
-        categorySlug: 'telefon',
-        price: 54999,
-        image: 'https://picsum.photos/seed/samsung/200/200',
-        rating: 4.7,
-        reviewCount: 890,
-    },
-    {
-        id: '3',
-        title: 'MacBook Pro 14" M3 Pro',
-        category: 'Laptop',
-        categorySlug: 'laptop',
-        price: 89999,
-        originalPrice: 94999,
-        image: 'https://picsum.photos/seed/macbook/200/200',
-        rating: 4.9,
-        reviewCount: 456,
-    },
-    {
-        id: '4',
-        title: 'Sony WH-1000XM5 Kulaklık',
-        category: 'Kulaklık',
-        categorySlug: 'kulaklik',
-        price: 12999,
-        image: 'https://picsum.photos/seed/sony/200/200',
-        rating: 4.8,
-        reviewCount: 2100,
-    },
-    {
-        id: '5',
-        title: 'Apple AirPods Pro 2',
-        category: 'Kulaklık',
-        categorySlug: 'kulaklik',
-        price: 8999,
-        originalPrice: 9999,
-        image: 'https://picsum.photos/seed/airpods/200/200',
-        rating: 4.7,
-        reviewCount: 3400,
-    },
-    {
-        id: '6',
-        title: 'PlayStation 5 Digital Edition',
-        category: 'Oyun Konsolu',
-        categorySlug: 'oyun-konsolu',
-        price: 18999,
-        image: 'https://picsum.photos/seed/ps5/200/200',
-        rating: 4.9,
-        reviewCount: 5600,
-    },
-    {
-        id: '7',
-        title: 'LG OLED 55" 4K Smart TV',
-        category: 'Televizyon',
-        categorySlug: 'televizyon',
-        price: 42999,
-        originalPrice: 49999,
-        image: 'https://picsum.photos/seed/lgtv/200/200',
-        rating: 4.8,
-        reviewCount: 780,
-    },
-    {
-        id: '8',
-        title: 'Apple Watch Series 9',
-        category: 'Akıllı Saat',
-        categorySlug: 'akilli-saat',
-        price: 15999,
-        image: 'https://picsum.photos/seed/applewatch/200/200',
-        rating: 4.6,
-        reviewCount: 1890,
-    },
-];
+import type {
+    ProductSearchParams,
+    ProductSearchResponse,
+    ProductSearchResult,
+    SearchSuggestion,
+    // Legacy types
+    SearchOptions,
+    SearchResponse,
+    SearchResult,
+} from "./types";
 
-// Mock arama önerileri
-const mockSuggestions: SearchSuggestion[] = [
-    { text: 'iphone 15', type: 'query', count: 15420 },
-    { text: 'iphone 15 pro', type: 'query', count: 8930 },
-    { text: 'iphone kılıf', type: 'query', count: 5200 },
-    { text: 'samsung', type: 'brand', count: 12300 },
-    { text: 'kulaklık', type: 'category', count: 8900 },
-    { text: 'laptop', type: 'category', count: 7600 },
-    { text: 'playstation', type: 'brand', count: 4500 },
-    { text: 'airpods', type: 'query', count: 6700 },
-];
+// API endpoint
+const SEARCH_ENDPOINT = "/v1/search";
 
-// Gecikme simülasyonu
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Recent searches storage key
+const RECENT_SEARCHES_KEY = "recentSearches";
+const MAX_RECENT_SEARCHES = 5;
+
+/**
+ * API çağrısı sonucu
+ */
+type SearchApiResult<T> =
+    | { success: true; data: T }
+    | { success: false; error: ApiError };
 
 export const searchService = {
     /**
-     * Elasticsearch benzeri arama
+     * Elasticsearch üzerinden ürün arar
+     * GET /api/v1/search
      */
-    search: async (query: string, options: SearchOptions = {}): Promise<SearchResponse> => {
+    searchProducts: async (
+        params: ProductSearchParams
+    ): Promise<SearchApiResult<ProductSearchResponse>> => {
+        try {
+            // Query params oluştur
+            const queryParams = new URLSearchParams();
+            queryParams.set("q", params.q);
+
+            if (params.category_id !== undefined) {
+                queryParams.set("category_id", String(params.category_id));
+            }
+            if (params.brand) {
+                queryParams.set("brand", params.brand);
+            }
+            if (params.gender) {
+                queryParams.set("gender", params.gender);
+            }
+            if (params.min_price !== undefined) {
+                queryParams.set("min_price", String(params.min_price));
+            }
+            if (params.max_price !== undefined) {
+                queryParams.set("max_price", String(params.max_price));
+            }
+            if (params.in_stock_only !== undefined) {
+                queryParams.set("in_stock_only", String(params.in_stock_only));
+            }
+            if (params.page !== undefined) {
+                queryParams.set("page", String(params.page));
+            }
+            if (params.page_size !== undefined) {
+                queryParams.set("page_size", String(params.page_size));
+            }
+
+            const response = await httpClient.get<ProductSearchResponse>(
+                `${SEARCH_ENDPOINT}?${queryParams.toString()}`
+            );
+
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: normalizeAxiosError(error),
+            };
+        }
+    },
+
+    /**
+     * Basit arama - sadece query string ile
+     */
+    search: async (
+        query: string,
+        options: { page?: number; pageSize?: number } = {}
+    ): Promise<SearchApiResult<ProductSearchResponse>> => {
+        return searchService.searchProducts({
+            q: query,
+            page: options.page ?? 1,
+            page_size: options.pageSize ?? 20,
+        });
+    },
+
+    /**
+     * Autocomplete önerileri
+     * NOT: Backend'de ayrı bir suggest endpoint'i yoksa,
+     * kısa bir arama yaparak önerileri döner
+     */
+    suggest: async (query: string): Promise<ProductSearchResult[]> => {
+        if (!query || query.length < 2) {
+            return [];
+        }
+
+        const result = await searchService.searchProducts({
+            q: query,
+            page_size: 6,
+        });
+
+        if (result.success) {
+            return result.data.products;
+        }
+
+        return [];
+    },
+
+    /**
+     * Son aramaları localStorage'dan alır
+     */
+    getRecentSearches: (): string[] => {
+        if (typeof window === "undefined") {
+            return [];
+        }
+
+        try {
+            const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+            return stored ? JSON.parse(stored) : [];
+        } catch {
+            return [];
+        }
+    },
+
+    /**
+     * Son aramayı kaydeder
+     */
+    saveRecentSearch: (query: string): void => {
+        if (typeof window === "undefined" || !query.trim()) {
+            return;
+        }
+
+        try {
+            const recent = searchService.getRecentSearches();
+            const filtered = recent.filter((s) => s !== query);
+            const updated = [query, ...filtered].slice(0, MAX_RECENT_SEARCHES);
+            localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+        } catch {
+            // localStorage hatası - sessizce devam et
+        }
+    },
+
+    /**
+     * Son aramaları temizler
+     */
+    clearRecentSearches: (): void => {
+        if (typeof window === "undefined") {
+            return;
+        }
+        localStorage.removeItem(RECENT_SEARCHES_KEY);
+    },
+
+    // ============ Legacy methods (geriye uyumluluk) ============
+
+    /**
+     * @deprecated Use searchProducts instead
+     * Legacy search method - eski SearchResponse formatını döner
+     */
+    legacySearch: async (
+        query: string,
+        options: SearchOptions = {}
+    ): Promise<SearchResponse> => {
         const startTime = Date.now();
 
-        // Gerçek API'yi simüle etmek için gecikme
-        await delay(150 + Math.random() * 100);
+        const result = await searchService.searchProducts({
+            q: query,
+            min_price: options.minPrice,
+            max_price: options.maxPrice,
+            page_size: options.limit ?? 20,
+        });
 
-        const normalizedQuery = query.toLowerCase().trim();
-
-        if (!normalizedQuery) {
+        if (!result.success) {
             return {
                 results: [],
                 suggestions: [],
@@ -126,109 +193,33 @@ export const searchService = {
             };
         }
 
-        // Filtreleme
-        let results = mockProducts.filter(product => {
-            const matchesQuery =
-                product.title.toLowerCase().includes(normalizedQuery) ||
-                product.category.toLowerCase().includes(normalizedQuery);
-
-            const matchesCategory = !options.category ||
-                product.categorySlug === options.category;
-
-            const matchesMinPrice = !options.minPrice ||
-                product.price >= options.minPrice;
-
-            const matchesMaxPrice = !options.maxPrice ||
-                product.price <= options.maxPrice;
-
-            return matchesQuery && matchesCategory && matchesMinPrice && matchesMaxPrice;
-        });
-
-        // Sıralama
-        if (options.sortBy) {
-            switch (options.sortBy) {
-                case 'price_asc':
-                    results.sort((a, b) => a.price - b.price);
-                    break;
-                case 'price_desc':
-                    results.sort((a, b) => b.price - a.price);
-                    break;
-                case 'rating':
-                    results.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-                    break;
-            }
-        }
-
-        // Limit
-        if (options.limit) {
-            results = results.slice(0, options.limit);
-        }
-
-        // İlgili öneriler
-        const suggestions = mockSuggestions
-            .filter(s => s.text.toLowerCase().includes(normalizedQuery))
-            .slice(0, 5);
+        // ProductSearchResult -> SearchResult dönüşümü
+        const results: SearchResult[] = result.data.products.map((p) => ({
+            id: String(p.id),
+            title: p.name,
+            category: p.category_name ?? "Kategori",
+            categorySlug: p.slug ?? "kategori",
+            price: p.lowest_price ?? 0,
+            originalPrice: p.original_price ?? undefined,
+            image: p.image_url ?? undefined,
+        }));
 
         return {
             results,
-            suggestions,
-            total: results.length,
+            suggestions: [],
+            total: result.data.total,
             took: Date.now() - startTime,
         };
     },
+};
 
-    /**
-     * Autocomplete önerileri
-     */
-    suggest: async (query: string): Promise<SearchSuggestion[]> => {
-        await delay(50 + Math.random() * 50);
-
-        const normalizedQuery = query.toLowerCase().trim();
-
-        if (!normalizedQuery || normalizedQuery.length < 2) {
-            return [];
-        }
-
-        return mockSuggestions
-            .filter(s => s.text.toLowerCase().startsWith(normalizedQuery))
-            .slice(0, 6);
-    },
-
-    /**
-     * Son aramalar (localStorage'dan)
-     */
-    getRecentSearches: (): string[] => {
-        if (typeof window === 'undefined') {return [];}
-
-        try {
-            const stored = localStorage.getItem('recentSearches');
-            return stored ? JSON.parse(stored) : [];
-        } catch {
-            return [];
-        }
-    },
-
-    /**
-     * Son aramayı kaydet
-     */
-    saveRecentSearch: (query: string): void => {
-        if (typeof window === 'undefined') {return;}
-
-        try {
-            const recent = searchService.getRecentSearches();
-            const filtered = recent.filter(s => s !== query);
-            const updated = [query, ...filtered].slice(0, 5);
-            localStorage.setItem('recentSearches', JSON.stringify(updated));
-        } catch {
-            // localStorage hatası
-        }
-    },
-
-    /**
-     * Son aramaları temizle
-     */
-    clearRecentSearches: (): void => {
-        if (typeof window === 'undefined') {return;}
-        localStorage.removeItem('recentSearches');
-    },
+// Type exports for convenience
+export type {
+    ProductSearchParams,
+    ProductSearchResponse,
+    ProductSearchResult,
+    SearchSuggestion,
+    SearchOptions,
+    SearchResponse,
+    SearchResult,
 };

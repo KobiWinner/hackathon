@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Clock, Loader2, Search, X } from 'lucide-react';
 
 import { searchService } from '@/api/search';
-import type { SearchResult } from '@/api/search';
+import type { ProductSearchResult } from '@/api/search';
 import { Text } from '@/components/ui/typography/Text';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { cn } from '@/lib/cn';
@@ -22,7 +22,7 @@ export function SearchBar({ className, placeholder = 'Ürün, kategori veya mark
     const [query, setQuery] = useState('');
     const [isFocused, setIsFocused] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [_results, setResults] = useState<SearchResult[]>([]);
+    const [_results, setResults] = useState<ProductSearchResult[]>([]);
     const [recentSearches, setRecentSearches] = useState<string[]>(() => {
         if (typeof window === 'undefined') { return []; }
         return searchService.getRecentSearches();
@@ -43,8 +43,10 @@ export function SearchBar({ className, placeholder = 'Ürün, kategori veya mark
         setIsLoading(true);
         try {
             const response = await searchService.search(q);
-            setResults(response.results);
-            searchService.addRecentSearch(q);
+            if (response.success) {
+                setResults(response.data.products);
+            }
+            searchService.saveRecentSearch(q);
             setRecentSearches(searchService.getRecentSearches());
             setIsFocused(false);
             router.push(`/search?q=${encodeURIComponent(q)}`);

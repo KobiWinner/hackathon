@@ -43,7 +43,7 @@ export function CategoriesDropdown() {
                     {categories.map((category) => (
                         <Link
                             key={category.id}
-                            href={`/category/${category.slug}`}
+                            href={`/search?category_id=${category.id}`}
                             className={cn(
                                 'flex items-center gap-3 px-5 py-3 transition-colors',
                                 'hover:bg-primary-50',
@@ -81,7 +81,7 @@ export function CategoriesDropdown() {
                         {activeCategory.subcategories.map((sub) => (
                             <Link
                                 key={sub.id}
-                                href={`/category/${sub.slug}`}
+                                href={`/search?category_id=${sub.id}`}
                                 className="flex items-center gap-3 px-5 py-3 hover:bg-white transition-colors"
                             >
                                 <Text as="span" size="base" color="muted" className="hover:text-primary transition-colors">

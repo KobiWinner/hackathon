@@ -21,7 +21,7 @@ const parseNumberEnv = (value: string | undefined, fallback: number) => {
 
 // Backend API base URL - .env'den alınır, yoksa localhost:8000 kullanılır
 const DEFAULT_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const DEFAULT_TIMEOUT = parseNumberEnv(
   process.env.NEXT_PUBLIC_API_TIMEOUT_MS,

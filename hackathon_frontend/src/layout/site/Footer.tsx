@@ -10,6 +10,7 @@ import {
   footerSections,
   socialLinks,
 } from "@/data/footer";
+import { JSX } from "react";
 
 // Sosyal medya ikonları
 function SocialIcon({ platform }: { platform: SocialLink["platform"] }) {
@@ -123,7 +124,7 @@ export function SiteFooter() {
             </Text>
             <ul className="space-y-3">
               {section.links.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   {link.external ? (
                     <a
                       href={link.href}
