@@ -12,40 +12,21 @@ class BasePipeline:
         self.steps: List[BaseStep] = []
 
     def add_step(self, step: BaseStep) -> "BasePipeline":
-        """
-        Zincire yeni bir adım ekler.
-        Fluent interface (return self) sayesinde zincirleme ekleme yapılabilir.
-        """
         self.steps.append(step)
         return self
 
-    async def execute(self, data: Any, user: Optional[UserContext] = None) -> Any:
+    async def execute(self, data: Any, user: Optional[UserContext] = None) -> PipelineContext:
         """
-        Pipeline'ı çalıştırır.
+        Pipeline'ı çalıştırır ve sonuçları içeren context nesnesini döndürür.
 
         Args:
-            data: İşlenecek ana veri (örn: ItemCreate şeması)
-            user: İşlemi yapan kullanıcı (Auth context)
+            data: İşlenecek ana veri.
+            user: İşlemi yapan kullanıcı.
 
         Returns:
-            PipelineContext.result: İşlemin sonucu
-
-        Raises:
-            HTTPException: Pipeline adımlarında hata oluşursa (400 Bad Request)
+            PipelineContext: İşlemin sonucunu ve durumunu içeren context nesnesi.
         """
-        # 1. Context oluşturuluyor (Veri + Kullanıcı birleşiyor)
         context = PipelineContext(initial_data=data, user=user)
-
-        # 2. Runner hazırlanıyor ve çalıştırılıyor
         runner = PipelineRunner(self.steps)
         await runner.run(context)
-
-        # 3. Hata kontrolü
-        if not context.is_valid:
-            # İlk hatayı kullanıcıya dön (400 Bad Request)
-            # İstersen tüm hataları string olarak birleştirip de dönebilirsin
-            error_message = context.errors[0]
-            raise ValidationException(message=error_message)
-
-        # 4. Sonuç dönüşü
-        return context.result
+        return context
