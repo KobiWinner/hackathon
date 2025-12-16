@@ -38,9 +38,8 @@ class Settings(BaseSettings):
     # --- Elasticsearch Ayarları ---
     # Elastic Cloud için cloud_id ve api_key kullanılır
     # Self-hosted için ELASTICSEARCH_URL kullanılır
-    ELASTICSEARCH_CLOUD_ID: str = ""
     ELASTICSEARCH_API_KEY: str = ""
-    ELASTICSEARCH_URL: str = ""  # Alternatif: self-hosted ES için
+    ELASTICSEARCH_URL: str = ""
     ELASTICSEARCH_INDEX_PREFIX: str = "hackathon"
 
     @computed_field  # type: ignore[prop-decorator]

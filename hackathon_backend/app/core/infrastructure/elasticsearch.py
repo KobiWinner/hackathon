@@ -30,19 +30,19 @@ class ElasticsearchService(ISearchService):
 
     def _create_client(self) -> AsyncElasticsearch:
         """Creates ES client based on settings."""
-        # Elastic Cloud connection (preferred)
-        if settings.ELASTICSEARCH_CLOUD_ID and settings.ELASTICSEARCH_API_KEY:
+        # URL with API key authentication
+        if settings.ELASTICSEARCH_URL and settings.ELASTICSEARCH_API_KEY:
             return AsyncElasticsearch(
-                cloud_id=settings.ELASTICSEARCH_CLOUD_ID,
+                hosts=[settings.ELASTICSEARCH_URL],
                 api_key=settings.ELASTICSEARCH_API_KEY,
             )
-        # Self-hosted connection
+        # URL only (no auth)
         elif settings.ELASTICSEARCH_URL:
             return AsyncElasticsearch(hosts=[settings.ELASTICSEARCH_URL])
         else:
             raise ValueError(
                 "Elasticsearch configuration is missing. "
-                "Set ELASTICSEARCH_CLOUD_ID + ELASTICSEARCH_API_KEY or URL"
+                "Set ELASTICSEARCH_URL (and optionally ELASTICSEARCH_API_KEY)"
             )
 
     def _get_index_name(self, index: str) -> str:
