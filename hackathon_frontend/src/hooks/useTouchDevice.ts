@@ -1,6 +1,6 @@
 'use client';
 
-import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 /**
  * Dokunmatik cihaz tespiti yapar.

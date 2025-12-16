@@ -1,7 +1,7 @@
 'use client';
 
-import { BREAKPOINTS } from "@/shared/constants";
-import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+import { BREAKPOINTS } from "@/constants";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 /**
  * Standart breakpoint'ler için boolean bayraklar döner.

@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { siteConfig } from "@/config/site";
+
+import type { Metadata } from "next";
+
 import "./globals.css";
-import { SiteLayout } from "@/layout/SiteLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hackathon",
-  description: "Hackathon Frontend Application",
+  title: siteConfig.title,
+  description: siteConfig.description,
 };
 
 export default function RootLayout({
@@ -26,9 +29,11 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
-        <SiteLayout>{children}</SiteLayout>
+
+        {children}
+
       </body>
     </html>
   );
