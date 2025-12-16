@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { ProductFilter, type FilterValues } from '@/components/ProductFilter';
+import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
 // Mock ürün verisi
@@ -178,11 +179,10 @@ export default function ProductListPage() {
 
     return (
         <div className="min-h-screen bg-background py-8">
-            <div className="container mx-auto px-4 max-w-7xl">
+            <Container>
                 {/* Başlık */}
                 <div className="mb-6">
                     <Heading level={1} size="3xl">Ürünler</Heading>
-                    <br />
                     <Text color="muted" className="mt-2">
                         Tüm ürünleri incele, fiyat karşılaştır ve en iyi fırsatları yakala!
                     </Text>
@@ -330,7 +330,7 @@ export default function ProductListPage() {
                         )}
                     </div>
                 </div>
-            </div>
+            </Container>
         </div>
     );
 }

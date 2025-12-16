@@ -10,6 +10,7 @@ import {
   CategoriesDropdown,
   SearchBar
 } from "@/components/header";
+import { Container } from "@/components/ui/Container";
 import { Text } from "@/components/ui/typography/Text";
 import { cn } from "@/lib/cn";
 
@@ -31,7 +32,7 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
             : "rounded-none border border-transparent bg-white shadow-sm"
         )}
       >
-        <header className="mx-auto max-w-7xl py-4 px-6 lg:px-8">
+        <Container className="py-4">
           {/* Desktop Layout */}
           <div className="hidden md:flex items-center gap-6">
             {/* Logo */}
@@ -104,7 +105,7 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
               </nav>
             )}
           </div>
-        </header>
+        </Container>
       </div>
     </>
   );
