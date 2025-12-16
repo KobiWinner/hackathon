@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 
+import { useScroll } from "@/hooks";
 import { SiteFooter } from "@/layout/site/Footer";
 import { SiteHeader } from "@/layout/site/Header";
-import { useScroll } from "@/hooks";
 
 export default function SiteLayout({ children }: { children: ReactNode }) {
     const { isScrolled } = useScroll({ threshold: 10 });

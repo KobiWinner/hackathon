@@ -1,0 +1,28 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+set -e
+
+CHANGED="$(git diff --cached --name-only)"
+
+run_frontend=false
+run_backend=false
+
+echo "$CHANGED" | grep -q "^hackathon_frontend/" && run_frontend=true || true
+echo "$CHANGED" | grep -q "^hackathon_backend/" && run_backend=true || true
+
+if [ "$run_frontend" = true ]; then
+  echo "== Frontend changed: lint =="
+  npm --prefix hackathon_frontend run lint
+else
+  echo "== Frontend not changed: skip lint =="
+fi
+
+if [ "$run_backend" = true ]; then
+  echo "== Backend changed: uv run pytest =="
+  cd hackathon_backend
+  uv run pytest -q
+  cd ..
+else
+  echo "== Backend not changed: skip pytest =="
+fi
