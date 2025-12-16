@@ -7,6 +7,9 @@ from app.application.pipelines.analytics.steps.normalize_currency_step import (
 from app.application.pipelines.analytics.steps.save_price_history_step import (
     SavePriceHistoryStep,
 )
+from app.application.pipelines.analytics.steps.trend_analysis_step import (
+    TrendAnalysisStep,
+)
 from app.application.pipelines.base import BasePipeline
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
 from app.domain.i_services.i_currency_service import ICurrencyService
@@ -21,6 +24,7 @@ class ProductAnalysisPipeline(BasePipeline):
     1. NormalizeCurrencyStep: Fiyatları TRY'ye çevirir
     2. FindOrCreateMappingStep: Provider mapping'i bulur/oluşturur
     3. SavePriceHistoryStep: Fiyat geçmişini kaydeder
+    4. TrendAnalysisStep: Fiyat trendini analiz eder
     """
 
     def __init__(self, uow: IUnitOfWork, currency_service: ICurrencyService) -> None:
@@ -35,8 +39,10 @@ class ProductAnalysisPipeline(BasePipeline):
         # Adım 3: Fiyat Geçmişini Kaydet
         self.add_step(SavePriceHistoryStep(uow))
 
+        # Adım 4: Trend Analizi
+        self.add_step(TrendAnalysisStep(uow))
+
         # --- Gelecekteki Adımlar ---
-        # self.add_step(TrendAnalysisStep(...))
         # self.add_step(ArbitrageDetectionStep(...))
 
 
