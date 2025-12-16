@@ -12,7 +12,7 @@ export function SiteFooter() {
           K
         </div>
         <span className="font-medium text-gray-700">
-          Hackathon © {currentYear}
+          KOBİ © {currentYear}
         </span>
       </div>
 

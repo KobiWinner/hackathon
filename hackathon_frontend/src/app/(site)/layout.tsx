@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from "react";
-
+import { CustomerServiceFAB } from "@/components/CustomerServiceFAB";
 import { useScroll } from "@/hooks";
 import { SiteFooter } from "@/layout/site/Footer";
 import { SiteHeader } from "@/layout/site/Header";
@@ -26,6 +26,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                     <SiteFooter />
                 </div>
             </footer>
+            <CustomerServiceFAB />
         </div>
     );
 }
