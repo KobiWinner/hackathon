@@ -359,6 +359,8 @@ export default function ProductPage() {
                     <Image
                         src={value as string}
                         alt="Ürün"
+                        width={40}
+                        height={40}
                         className="h-10 w-10 rounded-lg object-cover"
                     />
                 ) : (
