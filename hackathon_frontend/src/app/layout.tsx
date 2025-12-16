@@ -4,6 +4,7 @@ import { siteConfig } from "@/config/site";
 
 import type { Metadata } from "next";
 
+
 import "./globals.css";
 
 const geistSans = Geist({

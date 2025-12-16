@@ -3,10 +3,10 @@
 import type { ReactNode } from "react";
 
 
-import { MobileSidebar, DashboardSidebar, DashboardHeader, DashboardFooter } from "@/layout/dashboard";
 
 import { useBoolean } from "@/hooks/useBoolean";
 import { useTouchDevice } from "@/hooks/useTouchDevice";
+import { DashboardFooter, DashboardHeader, DashboardSidebar, MobileSidebar } from "@/layout/dashboard";
 
 export default function DashboardLayout({
     children,

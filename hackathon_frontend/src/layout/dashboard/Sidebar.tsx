@@ -8,8 +8,8 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, Sparkles } from "lucide-react";
 
 
-import { type DashboardNavItem, dashboardNavigation } from "@/data/dashboard/navigation";
 import { ScrollArea } from "@/components/ui/ScrollArea";
+import { type DashboardNavItem, dashboardNavigation } from "@/data/dashboard/navigation";
 import { cn } from "@/lib/cn";
 
 type SidebarProps = {

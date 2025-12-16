@@ -132,8 +132,8 @@ const eslintConfig = defineConfig([
   {
     name: "enforce-shared-hooks-location",
     files: ["src/**/*.{ts,tsx}"],
-    // Allow hooks in both hooks and context folders
-    ignores: ["src/shared/hooks/**/*", "src/shared/context/**/*"],
+    // Allow hooks in hooks, shared/hooks and shared/context folders
+    ignores: ["src/hooks/**/*", "src/shared/hooks/**/*", "src/shared/context/**/*"],
     rules: {
       "no-restricted-syntax": [
         "error",
