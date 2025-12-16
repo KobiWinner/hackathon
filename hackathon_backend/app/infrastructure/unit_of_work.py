@@ -4,6 +4,10 @@ from typing import Optional, Type
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
+from app.infrastructure.repositories.conversation_repository import (
+    ConversationRepository,
+)
+from app.infrastructure.repositories.message_repository import MessageRepository
 from app.infrastructure.repositories.price_history_repository import (
     PriceHistoryRepository,
 )
@@ -66,7 +70,16 @@ class UnitOfWork(IUnitOfWork):
         return ProductMappingRepository(self.db)
 
     @property
+    def conversations(self) -> ConversationRepository:
+        return ConversationRepository(self.db)
+
+    @property
+    def messages(self) -> MessageRepository:
+        return MessageRepository(self.db)
+
+    @property
     def db(self) -> AsyncSession:
         if not self.session:
             raise RuntimeError("Unit of Work is not started. Use 'async with uow:'")
         return self.session
+
