@@ -1,5 +1,5 @@
-import { Text, Heading, Label, Caption } from '../../../components/ui/typography/Text';
-import { Button } from '../../../components/ui/buttons/Button';
+import { Button } from '@/components/ui/buttons/Button';
+import { Caption, Heading, Label, Text } from '@/components/ui/typography/Text';
 
 
 export default function ArdovskiPage() {
@@ -165,4 +165,6 @@ export default function ArdovskiPage() {
             </section>
         </div>
     );
+}
+);
 }
