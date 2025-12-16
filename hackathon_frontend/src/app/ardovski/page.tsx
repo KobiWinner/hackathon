@@ -1,9 +1,10 @@
 import { Text, Heading, Label, Caption } from '../../components/ui/typography/Text';
 import { Button } from '../../components/ui/buttons/Button';
 
+
 export default function ArdovskiPage() {
     return (
-        <div className="p-8 space-y-8 max-w-4xl mx-auto">
+        <div className="space-y-8">
             <Heading level={1} className="mb-8">UI Component Test</Heading>
 
             {/* BUTTONS SECTION */}
