@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 
-import { User, Mail, Lock } from 'lucide-react';
+import Link from 'next/link';
+
+import { Lock, Mail, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/buttons/Button';
 import { FloatingTextField } from '@/components/ui/typography/FloatingTextField';
@@ -17,7 +18,7 @@ export default function RegisterPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // TODO: Register işlemi
-        console.log({ name, email, password });
+        console.warn({ name, email, password });
     };
 
     return (
