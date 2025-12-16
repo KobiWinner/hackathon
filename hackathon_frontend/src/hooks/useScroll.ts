@@ -59,12 +59,11 @@ export function useScroll(options: UseScrollOptions = {}): UseScrollReturn {
     }, []);
 
     useEffect(() => {
-        // Get initial scroll position on mount
-        const initialScrollY = window.scrollY;
-        lastScrollYRef.current = initialScrollY;
-        setScrollState({
-            scrollY: initialScrollY,
-            scrollDirection: null,
+        // Sync initial scroll position on mount via the handler
+        // Wrapped in requestAnimationFrame to make setState async (required by eslint)
+        lastScrollYRef.current = window.scrollY;
+        requestAnimationFrame(() => {
+            handleScroll();
         });
 
         // Throttled scroll handler using requestAnimationFrame
