@@ -1,6 +1,7 @@
 import axios from "axios";
 
-//import { attachInterceptors } from "./interceptors";
+import { getToken, removeToken } from "./auth/tokenService";
+import { attachInterceptors } from "./interceptors";
 
 import type { AxiosInstance } from "axios";
 
@@ -15,25 +16,31 @@ type HttpClientOptions = {
 
 const parseNumberEnv = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
-
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+// Backend API base URL - .env'den alınır, yoksa localhost:8000 kullanılır
 const DEFAULT_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
 const DEFAULT_TIMEOUT = parseNumberEnv(
   process.env.NEXT_PUBLIC_API_TIMEOUT_MS,
   15_000,
 );
-const _DEFAULT_RETRY_COUNT = parseNumberEnv(
+
+const DEFAULT_RETRY_COUNT = parseNumberEnv(
   process.env.NEXT_PUBLIC_API_RETRY_COUNT,
-  0,
+  2,
 );
-const _DEFAULT_RETRY_DELAY_MS = parseNumberEnv(
+
+const DEFAULT_RETRY_DELAY_MS = parseNumberEnv(
   process.env.NEXT_PUBLIC_API_RETRY_DELAY_MS,
   1_000,
 );
 
+/**
+ * HTTP client factory - özelleştirilmiş axios instance oluşturur
+ */
 export const createHttpClient = (
   options: HttpClientOptions = {},
 ): AxiosInstance => {
@@ -47,14 +54,25 @@ export const createHttpClient = (
     withCredentials: true,
   });
 
-  // attachInterceptors(client, {
-  //   getAuthToken: options.getAuthToken,
-  //   onUnauthorized: options.onUnauthorized,
-  //   retryCount: options.retryCount ?? DEFAULT_RETRY_COUNT,
-  //   retryDelayMs: options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS,
-  // });
+  // Interceptor'ları ekle
+  attachInterceptors(client, {
+    getAuthToken: options.getAuthToken ?? getToken,
+    onUnauthorized: options.onUnauthorized ?? (() => {
+      // Token geçersiz olduğunda temizle
+      removeToken();
+      // İsteğe bağlı: Login sayfasına yönlendir
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+    }),
+    retryCount: options.retryCount ?? DEFAULT_RETRY_COUNT,
+    retryDelayMs: options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS,
+  });
 
   return client;
 };
 
+/**
+ * Default HTTP client instance
+ */
 export const httpClient = createHttpClient();
