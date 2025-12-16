@@ -1,5 +1,5 @@
-import { Text, Heading, Label, Caption } from '../../components/ui/typography/Text';
-import { Button } from '../../components/ui/buttons/Button';
+import { Text, Heading, Label, Caption } from '../../../components/ui/typography/Text';
+import { Button } from '../../../components/ui/buttons/Button';
 
 
 export default function ArdovskiPage() {
