@@ -130,26 +130,26 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    name: "enforce-shared-hooks-location",
+    name: "enforce-hooks-location",
     files: ["src/**/*.{ts,tsx}"],
-    // Allow hooks in hooks, shared/hooks and shared/context folders
-    ignores: ["src/hooks/**/*", "src/shared/hooks/**/*", "src/shared/context/**/*"],
+    // Allow hooks in hooks, /hooks and /context folders
+    ignores: ["src/hooks/**/*", "src/hooks/**/*", "src/context/**/*"],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
           selector: "FunctionDeclaration[id.name=/^use[A-Z]/]",
-          message: "Custom hooks sadece src/shared/hooks veya src/shared/context altında tanımlanmalı.",
+          message: "Custom hooks sadece src/hooks veya src/context altında tanımlanmalı.",
         },
         {
           selector:
             "VariableDeclarator[id.name=/^use[A-Z]/][init.type='ArrowFunctionExpression']",
-          message: "Custom hooks sadece src/shared/hooks veya src/shared/context altında tanımlanmalı.",
+          message: "Custom hooks sadece src/hooks veya src/context altında tanımlanmalı.",
         },
         {
           selector:
             "VariableDeclarator[id.name=/^use[A-Z]/][init.type='FunctionExpression']",
-          message: "Custom hooks sadece src/shared/hooks veya src/shared/context altında tanımlanmalı.",
+          message: "Custom hooks sadece src/hooks veya src/context altında tanımlanmalı.",
         },
         {
           selector:
