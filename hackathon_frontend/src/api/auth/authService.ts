@@ -1,5 +1,7 @@
-import { httpClient } from "../httpClient";
 import { type ApiError, normalizeAxiosError } from "@/api/types";
+
+import { httpClient } from "../httpClient";
+
 
 import type {
     AuthResponse,
