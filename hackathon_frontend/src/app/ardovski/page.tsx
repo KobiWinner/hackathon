@@ -1,9 +1,73 @@
 import { Text, Heading, Label, Caption } from '../../components/ui/typography/Text';
+import { Button } from '../../components/ui/buttons/Button';
 
 export default function ArdovskiPage() {
     return (
         <div className="p-8 space-y-8 max-w-4xl mx-auto">
-            <Heading level={1} className="mb-8">Typography Component Test</Heading>
+            <Heading level={1} className="mb-8">UI Component Test</Heading>
+
+            {/* BUTTONS SECTION */}
+            <section className="space-y-6 p-6 border rounded-lg">
+                <Heading level={2} className="border-b pb-2">Buttons</Heading>
+
+                <div className="space-y-4">
+                    <Heading level={3}>Variants</Heading>
+                    <div className="flex flex-wrap gap-3">
+                        <Button variant="solid" txt="Solid" />
+                        <Button variant="gradient" txt="Gradient" />
+                        <Button variant="secondary" txt="Secondary" />
+                        <Button variant="outline" txt="Outline" />
+                        <Button variant="ghost" txt="Ghost" />
+                        <Button variant="white" txt="White" />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <Heading level={3}>Sizes</Heading>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button size="xs" txt="Extra Small" />
+                        <Button size="sm" txt="Small" />
+                        <Button size="md" txt="Medium" />
+                        <Button size="lg" txt="Large" />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <Heading level={3}>States</Heading>
+                    <div className="flex flex-wrap gap-3">
+                        <Button txt="Normal" />
+                        <Button loading txt="Loading" />
+                        <Button disabled txt="Disabled" />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <Heading level={3}>Full Width</Heading>
+                    <Button fullWidth txt="Full Width Button" variant="gradient" />
+                </div>
+
+                <div className="space-y-4">
+                    <Heading level={3}>With Icon</Heading>
+                    <div className="flex flex-wrap gap-3">
+                        <Button
+                            icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>}
+                            txt="Continue"
+                        />
+                        <Button
+                            variant="outline"
+                            icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>}
+                            txt="Upload"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <Heading level={3}>As Link</Heading>
+                    <Button as="a" href="#" txt="Link Button" variant="secondary" />
+                </div>
+            </section>
+
+            {/* TYPOGRAPHY SECTION */}
 
             <section className="space-y-4 p-6 border rounded-lg">
                 <Heading level={2} className="border-b pb-2">Sizes</Heading>
