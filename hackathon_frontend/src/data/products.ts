@@ -168,3 +168,8 @@ export const getPopularProducts = (): Product[] => {
 export const getLowestPriceProducts = (): Product[] => {
     return [...mockProducts].sort((a, b) => a.lowestPrice - b.lowestPrice);
 };
+
+// Tüm ürünler
+export const getAllProducts = (): Product[] => {
+    return [...mockProducts];
+};

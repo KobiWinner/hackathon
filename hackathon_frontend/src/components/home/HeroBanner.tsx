@@ -34,25 +34,14 @@ export function HeroBanner({ className }: HeroBannerProps) {
                 </Text>
                 <div className="flex flex-wrap gap-4 mt-8">
                     <Link
-                        href="/category/kosu-yuruyus"
-                        className={cn(
-                            'px-6 py-3 rounded-xl font-semibold',
-                            'bg-white text-primary',
-                            'hover:bg-white/90 transition-colors',
-                            'shadow-lg shadow-black/10'
-                        )}
-                    >
-                        Fiyatları Karşılaştır
-                    </Link>
-                    <Link
-                        href="/fiyat-dusuler"
+                        href="/product"
                         className={cn(
                             'px-6 py-3 rounded-xl font-semibold',
                             'bg-white/20 text-white border border-white/30',
                             'hover:bg-white/30 transition-colors'
                         )}
                     >
-                        Fiyat Düşenler
+                        Tüm Ürünleri Görüntüle
                     </Link>
                 </div>
             </div>
