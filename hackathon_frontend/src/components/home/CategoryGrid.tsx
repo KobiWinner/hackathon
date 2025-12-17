@@ -1,16 +1,31 @@
 import Link from 'next/link';
 
 import { Text } from '@/components/ui/typography/Text';
-import { categories } from '@/data/categories';
 import { cn } from '@/lib/cn';
+
+// Statik kategori listesi
+const staticCategories = [
+    { id: 'kosu-yuruyus', name: 'Koşu/Yürüyüş', emoji: '🏃' },
+    { id: 'fitness-kondisyon', name: 'Fitness/Kondisyon', emoji: '💪' },
+    { id: 'futbol', name: 'Futbol', emoji: '⚽' },
+    { id: 'basketbol', name: 'Basketbol', emoji: '🏀' },
+    { id: 'bisiklet', name: 'Bisiklet', emoji: '🚴' },
+    { id: 'outdoor-kamp', name: 'Outdoor/Kamp', emoji: '⛺' },
+    { id: 'yuzme', name: 'Yüzme', emoji: '🏊' },
+    { id: 'kis-sporlari', name: 'Kış Sporları', emoji: '⛷️' },
+    { id: 'tenis', name: 'Tenis', emoji: '🎾' },
+    { id: 'voleybol', name: 'Voleybol', emoji: '🏐' },
+    { id: 'golf', name: 'Golf', emoji: '⛳' },
+    { id: 'yoga-pilates', name: 'Yoga/Pilates', emoji: '🧘' },
+];
 
 export function CategoryGrid() {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {categories.map((category) => (
+            {staticCategories.map((category) => (
                 <Link
                     key={category.id}
-                    href={`/category/${category.slug}`}
+                    href={`/product?category=${encodeURIComponent(category.name)}`}
                     className={cn(
                         'group flex flex-col items-center gap-3 p-4 rounded-2xl',
                         'bg-white border border-border',
@@ -26,7 +41,7 @@ export function CategoryGrid() {
                         'transition-colors duration-300'
                     )}>
                         <span className="text-2xl">
-                            {getCategoryEmoji(category.slug)}
+                            {category.emoji}
                         </span>
                     </div>
                     <Text
@@ -42,18 +57,4 @@ export function CategoryGrid() {
             ))}
         </div>
     );
-}
-
-function getCategoryEmoji(slug: string): string {
-    const emojiMap: Record<string, string> = {
-        'kosu-yuruyus': '🏃',
-        'fitness-kondisyon': '💪',
-        'futbol': '⚽',
-        'basketbol': '🏀',
-        'bisiklet': '🚴',
-        'outdoor-kamp': '⛺',
-        'yuzme': '🏊',
-        'kis-sporlari': '⛷️',
-    };
-    return emojiMap[slug] || '🏆';
 }

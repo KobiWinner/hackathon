@@ -40,6 +40,7 @@ export default function ProductListPage() {
 function ProductListContent() {
     const searchParams = useSearchParams();
     const queryFromUrl = searchParams.get('q') || '';
+    const categoryFromUrl = searchParams.get('category') || '';
 
     // Ürünler ve loading state
     const [products, setProducts] = useState<ProductSearchResult[]>([]);
@@ -53,9 +54,9 @@ function ProductListContent() {
     const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
     const hasLoadedFilterOptions = useRef(false);
 
-    // Aktif filtreler
+    // Aktif filtreler - URL'den gelen kategori varsa initial state'e ekle
     const [activeFilters, setActiveFilters] = useState<FilterValues>({
-        categories: [],
+        categories: categoryFromUrl ? [categoryFromUrl] : [],
         brands: [],
         minPrice: '',
         maxPrice: '',
@@ -214,11 +215,16 @@ function ProductListContent() {
                 {/* Başlık */}
                 <div className="mb-6">
                     <Heading level={1} size="3xl">
-                        {queryFromUrl ? `"${queryFromUrl}" için sonuçlar` : 'Ürünler'}
+                        {queryFromUrl
+                            ? `"${queryFromUrl}" için sonuçlar`
+                            : categoryFromUrl
+                                ? `${categoryFromUrl} Kategorisi`
+                                : 'Ürünler'
+                        }
                     </Heading>
                     <br />
                     <Text color="muted" className="mt-2">
-                        {queryFromUrl
+                        {queryFromUrl || categoryFromUrl
                             ? `${totalProducts} ürün bulundu`
                             : 'Tüm ürünleri incele, fiyat karşılaştır ve en iyi fırsatları yakala!'}
                     </Text>
