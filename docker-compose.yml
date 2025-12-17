@@ -36,7 +36,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
-      - AUTO_GENERATE_MIGRATIONS=true  # Set to false in production
+      - AUTO_GENERATE_MIGRATIONS=true # Set to false in production
     depends_on:
       db:
         condition: service_healthy
@@ -64,7 +64,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./hackathon_backend/scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -81,7 +81,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -110,7 +110,7 @@ services:
       context: ./hackathon_backend
       dockerfile: Dockerfile
     container_name: hackathon_worker
-    command: celery -A app.core.celery.celery_app worker --loglevel=info
+    command: celery -A app.core.config.celery.celery_app worker --loglevel=info
     env_file:
       - ./hackathon_backend/.env
     environment:
@@ -136,7 +136,7 @@ services:
       context: ./hackathon_backend
       dockerfile: Dockerfile
     container_name: hackathon_flower
-    command: celery -A app.core.celery.celery_app flower --port=5555
+    command: celery -A app.core.config.celery.celery_app flower --port=5555
     ports:
       - "5555:5555"
     env_file:
@@ -147,6 +147,52 @@ services:
     depends_on:
       - redis
       - worker
+    networks:
+      - hackathon_network
+
+  # ============================================
+  # CELERY BEAT - Scheduler
+  # ============================================
+  beat:
+    build:
+      context: ./hackathon_backend
+      dockerfile: Dockerfile
+    container_name: hackathon_beat
+    command: celery -A app.core.config.celery.celery_app beat --loglevel=info
+    env_file:
+      - ./hackathon_backend/.env
+    environment:
+      - POSTGRES_SERVER=db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - ./hackathon_backend/app:/app/app
+    networks:
+      - hackathon_network
+
+  # ============================================
+  # MOCKER API - Provider Mock Service
+  # ============================================
+  mocker:
+    build:
+      context: ./mocker/hackathon_backend
+      dockerfile: Dockerfile
+    container_name: mocker_api
+    restart: always
+    ports:
+      - "8002:8000"
+    environment:
+      - PROJECT_NAME=MockerAPI
+      - DEBUG=true
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+    volumes:
+      - ./mocker/hackathon_backend/app:/app/app
     networks:
       - hackathon_network
 
