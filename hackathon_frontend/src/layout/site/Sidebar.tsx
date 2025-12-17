@@ -64,9 +64,6 @@ export function SiteSidebar({ onClose, fromRight = false }: SiteSidebarProps) {
 
             {/* Logo / Brand Area */}
             <div className="relative flex h-22 shrink-0 items-center gap-3 border-b border-gray-200 py-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 shadow-lg shadow-violet-500/30">
-                    <span className="text-lg font-bold text-white">K</span>
-                </div>
                 <div className="min-w-0 overflow-hidden">
                     <h2 className="truncate text-lg font-bold text-gray-900">
                         Hackathon

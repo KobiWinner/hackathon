@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { Container } from "@/components/ui/Container";
 import { Text } from "@/components/ui/typography/Text";
 import {
   type SocialLink,
@@ -88,9 +89,6 @@ export function SiteFooter() {
         {/* Logo & Açıklama */}
         <div className="col-span-2 md:col-span-4 lg:col-span-1">
           <Link href="/" className="inline-flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-600 text-lg font-bold text-white shadow-lg shadow-primary/25">
-              K
-            </div>
             <span className="text-xl font-bold text-foreground">
               {companyInfo.name}
             </span>
@@ -147,65 +145,6 @@ export function SiteFooter() {
             </ul>
           </div>
         ))}
-      </div>
-
-      {/* Orta Bölüm - İletişim & Newsletter */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 py-8 border-y border-border">
-        {/* İletişim Bilgileri */}
-        <div className="space-y-4">
-          <Text as="h3" size="sm" weight="semibold">
-            İletişim
-          </Text>
-          <div className="space-y-3">
-            <a
-              href={`mailto:${footerContact.email}`}
-              className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary">
-                <MailIcon />
-              </span>
-              {footerContact.email}
-            </a>
-            <a
-              href={`tel:${footerContact.phone.replace(/\s/g, "")}`}
-              className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary-50 text-secondary">
-                <PhoneIcon />
-              </span>
-              {footerContact.phone}
-            </a>
-            <div className="flex items-start gap-3 text-sm text-muted-foreground">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent-600">
-                <LocationIcon />
-              </span>
-              <span className="pt-2">{footerContact.address}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Newsletter */}
-        <div className="lg:col-span-2">
-          <Text as="h3" size="sm" weight="semibold" className="mb-4">
-            Bültenimize Abone Olun
-          </Text>
-          <Text size="sm" color="muted" className="mb-4">
-            En yeni ürünler, kampanyalar ve indirimlerden haberdar olun.
-          </Text>
-          <form className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              placeholder="E-posta adresiniz"
-              className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            />
-            <button
-              type="submit"
-              className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-600 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-            >
-              Abone Ol
-            </button>
-          </form>
-        </div>
       </div>
 
       {/* Alt Bölüm - Telif Hakkı & Ödeme Yöntemleri */}

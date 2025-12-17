@@ -91,7 +91,8 @@ class ProductSearchService:
         filter_clauses: List[Dict[str, Any]] = []
 
         # Main search query - multi_match on text fields including variants
-        if request.q:
+        # "*" karakteri tüm ürünleri getirmek için kullanılır
+        if request.q and request.q.strip() != "*":
             must_clauses.append({
                 "multi_match": {
                     "query": request.q,

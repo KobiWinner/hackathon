@@ -18,7 +18,7 @@ import type {
 } from "./types";
 
 // API endpoint
-const SEARCH_ENDPOINT = "/v1/search";
+const SEARCH_ENDPOINT = "/api/v1/search";
 
 // Recent searches storage key
 const RECENT_SEARCHES_KEY = "recentSearches";
