@@ -5,6 +5,19 @@ echo "=========================================="
 echo "  🚀 Starting Application Setup"
 echo "=========================================="
 
+# Determine container role from command arguments
+COMMAND="$@"
+
+# Flower doesn't need PostgreSQL, only Redis
+if [[ "$COMMAND" == *"flower"* ]]; then
+    echo "🌸 Flower mode detected - skipping database setup"
+    echo ""
+    echo "=========================================="
+    echo "  🌸 Starting Celery Flower"
+    echo "=========================================="
+    exec $COMMAND
+fi
+
 # Veritabanı bağlantısını bekle (basit TCP kontrolü)
 echo "⏳ Waiting for database to be ready..."
 while ! python -c "
@@ -28,20 +41,23 @@ done
 sleep 3
 echo "✅ Database is ready!"
 
-# Alembic migration oluştur (sadece development'ta)
-echo ""
-if [ "$AUTO_GENERATE_MIGRATIONS" = "true" ]; then
-    echo "🔄 Generating new migrations (development mode)..."
-    alembic revision --autogenerate -m "auto_migration_$(date +%Y%m%d_%H%M%S)" 2>/dev/null || echo "  ℹ️  No new migrations needed or already up to date"
-else
-    echo "ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable."
-fi
+# Migrations only for API (not for worker)
+if [ "$#" -eq 0 ]; then
+    # Alembic migration oluştur (sadece development'ta)
+    echo ""
+    if [ "$AUTO_GENERATE_MIGRATIONS" = "true" ]; then
+        echo "🔄 Generating new migrations (development mode)..."
+        alembic revision --autogenerate -m "auto_migration_$(date +%Y%m%d_%H%M%S)" 2>/dev/null || echo "  ℹ️  No new migrations needed or already up to date"
+    else
+        echo "ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable."
+    fi
 
-# Alembic migration çalıştır
-echo ""
-echo "🔄 Running database migrations..."
-alembic upgrade head
-echo "✅ Migrations completed!"
+    # Alembic migration çalıştır
+    echo ""
+    echo "🔄 Running database migrations..."
+    alembic upgrade head
+    echo "✅ Migrations completed!"
+fi
 
 # Uygulamayı başlat
 echo ""
@@ -58,3 +74,4 @@ else
     echo "=========================================="
     exec uvicorn app.main:app --host 0.0.0.0 --port 8000
 fi
+

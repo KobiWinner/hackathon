@@ -53,23 +53,6 @@ async def search_products(
     return await search_service.search_products(request)
 
 
-@router.get("/products/{product_id}", response_model=ProductSearchResult)
-async def get_product_by_id(
-    product_id: int,
-    search_service: ProductSearchService = Depends(get_product_search_service),
-) -> ProductSearchResult:
-    """
-    Ürün detay endpoint'i.
-
-    Elasticsearch'ten ID ile ürün getirir.
-    """
-    product = await search_service.get_product_by_id(product_id)
-    
-    if not product:
-        raise HTTPException(status_code=404, detail="Ürün bulunamadı")
-    
-    return product
-
 
 @router.post("/search/reindex")
 async def reindex_products(
@@ -84,4 +67,37 @@ async def reindex_products(
     await search_service.ensure_index()
 
     return {"status": "ok", "message": "Index is ready"}
+
+
+from app.api.deps import get_uow
+from app.application.cqrs.queries.product_query import ProductQueryService
+from app.domain.schemas.products.product_full_detail import ProductFullDetailResponse
+from app.infrastructure.unit_of_work import UnitOfWork
+
+
+@router.get("/{product_id}", response_model=ProductFullDetailResponse)
+async def get_product_full_detail(
+    product_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+) -> ProductFullDetailResponse:
+    """
+    Kapsamlı ürün detayı endpoint'i.
+    
+    Döndürür:
+    - Ürün bilgileri
+    - Tüm satıcı fiyatları (en ucuzdan pahalıya)
+    - Fiyat geçmişi (son 30 gün)
+    - Varyantlar ve renk/beden seçenekleri
+    """
+    async with uow:
+        query_service = ProductQueryService(uow.db)
+        product = await query_service.get_product_full_detail(product_id)
+        
+        if not product:
+            raise HTTPException(
+                status_code=404,
+                detail="Ürün bulunamadı"
+            )
+        return product
+
 
