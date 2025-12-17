@@ -129,13 +129,37 @@ export const searchService = {
         productId: number
     ): Promise<SearchApiResult<ProductSearchResult>> => {
         try {
-            const response = await httpClient.get<ProductSearchResult>(
+            // Backend returns ProductFullDetailResponse with different field names
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const response = await httpClient.get<any>(
                 `/api/v1/products/${productId}`
             );
 
+            // Normalize backend response to match ProductSearchResult type
+            const backendData = response.data;
+            const normalizedData: ProductSearchResult = {
+                id: backendData.id,
+                name: backendData.name,
+                slug: backendData.slug,
+                brand: backendData.brand,
+                category_id: backendData.category?.id ?? null,
+                category_name: backendData.category?.name ?? null,
+                gender: backendData.gender,
+                image_url: backendData.image_url,
+                description: backendData.description,
+                lowest_price: backendData.best_price?.price ?? null,
+                original_price: backendData.best_price?.original_price ?? null,
+                currency_code: backendData.best_price?.currency_code ?? "TRY",
+                in_stock: backendData.provider_count > 0,
+                colors: backendData.available_colors ?? [],
+                sizes: backendData.available_sizes ?? [],
+                materials: [],
+                discount_percentage: backendData.best_price?.discount_percentage ?? null,
+            };
+
             return {
                 success: true,
-                data: response.data,
+                data: normalizedData,
             };
         } catch (error) {
             return {

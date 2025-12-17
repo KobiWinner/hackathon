@@ -54,19 +54,6 @@ async def search_products(
 
 
 
-@router.post("/search/reindex")
-async def reindex_products(
-    search_service: ProductSearchService = Depends(get_product_search_service),
-) -> dict:
-    """
-    Ürün index'ini yeniden oluştur.
-
-    Not: Bu endpoint admin yetkisi gerektirir (şimdilik açık).
-    """
-    # Ensure index exists
-    await search_service.ensure_index()
-
-    return {"status": "ok", "message": "Index is ready"}
 
 
 from app.api.deps import get_uow

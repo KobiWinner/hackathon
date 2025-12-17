@@ -1,14 +1,12 @@
-"""Category Service for business logic and Elasticsearch integration."""
+"""Category Service for business logic - uses PostgreSQL database."""
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import structlog
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 
-from app.application.services.product_search_service import (
-    PRODUCTS_INDEX,
-    ProductSearchService,
-)
 from app.domain.schemas.products.category import (
     CategoryResponse,
     CategoryWithChildrenResponse,
@@ -16,6 +14,10 @@ from app.domain.schemas.products.category import (
     ProductSearchResultSimple,
 )
 from app.infrastructure.unit_of_work import UnitOfWork
+from app.persistence.db.session import AsyncSessionLocal
+from app.persistence.models.products.product import Product
+from app.persistence.models.products.product_mappings import ProductMapping
+from app.persistence.models.price.price_history import PriceHistory
 
 logger = structlog.get_logger(__name__)
 
@@ -23,23 +25,11 @@ logger = structlog.get_logger(__name__)
 class CategoryService:
     """
     Category Service.
-    Handles category business logic and product fetching via Elasticsearch.
+    Handles category business logic and product fetching via PostgreSQL.
     """
 
-    def __init__(
-        self,
-        uow: UnitOfWork,
-        search_service: Optional[ProductSearchService] = None,
-    ) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         self.uow = uow
-        self._search_service = search_service
-
-    @property
-    def search(self) -> ProductSearchService:
-        """Lazy load search service."""
-        if self._search_service is None:
-            self._search_service = ProductSearchService()
-        return self._search_service
 
     async def get_category_with_products(
         self,
@@ -52,19 +42,7 @@ class CategoryService:
         in_stock_only: bool = True,
     ) -> Optional[CategoryWithProductsResponse]:
         """
-        Get category details with products from Elasticsearch.
-
-        Args:
-            identifier: Category ID or slug
-            page: Page number (1-indexed)
-            page_size: Number of products per page
-            min_price: Minimum price filter
-            max_price: Maximum price filter
-            brand: Brand filter
-            in_stock_only: Only show in-stock products
-
-        Returns:
-            CategoryWithProductsResponse or None if category not found
+        Get category details with products from database.
         """
         async with self.uow:
             # Get category
@@ -72,81 +50,72 @@ class CategoryService:
             if not category:
                 return None
 
-            # Build Elasticsearch query
-            filter_clauses: List[Dict[str, Any]] = [
-                {"term": {"category_id": category.id}}
-            ]
-
-            if brand:
-                filter_clauses.append({"term": {"brand": brand}})
-
-            if in_stock_only:
-                filter_clauses.append({"term": {"in_stock": True}})
-
-            if min_price is not None:
-                filter_clauses.append(
-                    {"range": {"lowest_price": {"gte": float(min_price)}}}
-                )
-
-            if max_price is not None:
-                filter_clauses.append(
-                    {"range": {"lowest_price": {"lte": float(max_price)}}}
-                )
-
-            query: Dict[str, Any] = {
-                "bool": {
-                    "must": [{"match_all": {}}],
-                    "filter": filter_clauses,
-                }
-            }
-
-            # Calculate offset
-            from_ = (page - 1) * page_size
-
-            # Sort by price ascending
-            sort = [{"lowest_price": {"order": "asc"}}]
-
-            # Execute search
-            result = await self.search.search.search(
-                index=PRODUCTS_INDEX,
-                query=query,
-                from_=from_,
-                size=page_size,
-                sort=sort,
+        # Get products from database
+        async with AsyncSessionLocal() as session:
+            # Base query for products in this category
+            query = (
+                select(Product)
+                .where(Product.category_id == category.id)
             )
 
-            # Map results
-            products = []
-            for hit in result.get("hits", []):
-                try:
-                    products.append(
-                        ProductSearchResultSimple(
-                            id=hit.get("id", 0),
-                            name=hit.get("name", ""),
-                            slug=hit.get("slug"),
-                            brand=hit.get("brand"),
-                            image_url=hit.get("image_url"),
-                            lowest_price=(
-                                Decimal(str(hit["lowest_price"]))
-                                if hit.get("lowest_price")
-                                else None
-                            ),
-                            original_price=(
-                                Decimal(str(hit["original_price"]))
-                                if hit.get("original_price")
-                                else None
-                            ),
-                            currency_code=hit.get("currency_code", "TRY"),
-                            in_stock=hit.get("in_stock", True),
-                        )
-                    )
-                except Exception as e:
-                    logger.warning(
-                        "Failed to parse product hit", error=str(e), hit=hit
-                    )
+            # Brand filter
+            if brand:
+                query = query.where(Product.brand == brand)
+
+            # Get total count
+            count_query = select(func.count()).select_from(query.subquery())
+            total_result = await session.execute(count_query)
+            total = total_result.scalar() or 0
+
+            # Pagination
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size).order_by(Product.name)
+
+            # Execute
+            result = await session.execute(query)
+            products_db = result.scalars().all()
+
+            # Get lowest prices and build response
+            products: List[ProductSearchResultSimple] = []
+            for product in products_db:
+                # Get lowest price
+                price_query = (
+                    select(PriceHistory.price, PriceHistory.original_price, PriceHistory.in_stock)
+                    .join(ProductMapping, PriceHistory.mapping_id == ProductMapping.id)
+                    .where(ProductMapping.product_id == product.id)
+                    .order_by(PriceHistory.price)
+                    .limit(1)
+                )
+                price_result = await session.execute(price_query)
+                price_row = price_result.first()
+
+                lowest_price = Decimal(str(price_row[0])) if price_row else None
+                original_price = Decimal(str(price_row[1])) if price_row and price_row[1] else None
+                in_stock = price_row[2] if price_row else True
+
+                # Apply filters
+                if min_price is not None and lowest_price is not None:
+                    if lowest_price < min_price:
+                        continue
+                if max_price is not None and lowest_price is not None:
+                    if lowest_price > max_price:
+                        continue
+                if in_stock_only and not in_stock:
                     continue
 
-            total = result.get("total", 0)
+                products.append(
+                    ProductSearchResultSimple(
+                        id=product.id,
+                        name=product.name,
+                        slug=product.slug,
+                        brand=product.brand,
+                        image_url=product.image_url,
+                        lowest_price=lowest_price,
+                        original_price=original_price,
+                        currency_code="TRY",
+                        in_stock=in_stock,
+                    )
+                )
 
             return CategoryWithProductsResponse(
                 category=category,

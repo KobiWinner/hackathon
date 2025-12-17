@@ -19,36 +19,11 @@ import {
     ProviderPriceTable,
     SizeSelector,
     TIME_RANGES,
-    generateMockPriceHistory,
 } from '@/components/product';
 import type { PriceStats, ProviderPrice, TimeRangeKey } from '@/components/product';
 import { Button } from '@/components/ui/buttons/Button';
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
-
-// Mock satıcı fiyatları üretici - API entegrasyonu olduğunda kaldırılacak
-// Ürün ID'sine göre sabit değerler üretiyor
-const generateMockProviderPrices = (basePrice: number, productId: number): ProviderPrice[] => {
-    const providers = [
-        { name: 'Amazon', rating: 4.8, shippingDays: 2, priceMultiplier: 0.95 },
-        { name: 'Trendyol', rating: 4.6, shippingDays: 3, priceMultiplier: 1.0 },
-        { name: 'Hepsiburada', rating: 4.5, shippingDays: 2, priceMultiplier: 1.02 },
-        { name: 'N11', rating: 4.3, shippingDays: 4, priceMultiplier: 1.05 },
-        { name: 'GittiGidiyor', rating: 4.2, shippingDays: 3, priceMultiplier: 1.08 },
-    ];
-
-    return providers
-        .map((p, i) => ({
-            id: i + 1,
-            provider: p.name,
-            price: Math.round(basePrice * p.priceMultiplier + (productId % 100)),
-            originalPrice: Math.round(basePrice * 1.2 + (productId % 50)),
-            inStock: (productId + i) % 5 !== 0, // Deterministik stok durumu
-            rating: p.rating,
-            shippingDays: p.shippingDays,
-        }))
-        .sort((a, b) => a.price - b.price);
-};
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -95,17 +70,28 @@ export default function ProductDetailPage() {
         fetchProduct();
     }, [fetchProduct]);
 
-    // Computed values
+    // Computed values - use real API data
     const providerPrices = useMemo(() => {
-        if (!product?.lowest_price) { return []; }
-        return generateMockProviderPrices(product.lowest_price, productId);
-    }, [product?.lowest_price, productId]);
+        if (!product?.provider_prices) { return []; }
+        return product.provider_prices.map((p, i) => ({
+            id: p.provider_id,
+            provider: p.provider_name,
+            price: parseFloat(p.current_price),
+            originalPrice: parseFloat(p.original_price),
+            inStock: p.in_stock,
+            rating: parseFloat(p.rating),
+            shippingDays: 2 + (i % 3), // Estimated shipping
+        })).sort((a, b) => a.price - b.price);
+    }, [product?.provider_prices]);
 
     const priceHistory = useMemo(() => {
-        if (!product?.lowest_price) { return []; }
-        const range = TIME_RANGES.find((r) => r.key === selectedTimeRange);
-        return generateMockPriceHistory(product.lowest_price, range?.days || 30);
-    }, [product?.lowest_price, selectedTimeRange]);
+        if (!product?.price_history) { return []; }
+        return product.price_history.map(p => ({
+            date: new Date(p.date).toLocaleDateString('tr-TR'),
+            price: parseFloat(p.price),
+            provider: p.provider_name,
+        }));
+    }, [product?.price_history]);
 
     const lowestPrice = useMemo(() => {
         if (providerPrices.length === 0) { return null; }
