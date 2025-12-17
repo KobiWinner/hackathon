@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -9,9 +9,44 @@ import { Loader2 } from 'lucide-react';
 
 import { searchService } from '@/api/search';
 import type { ProductSearchResult } from '@/api/search';
+import {
+    BestPriceCard,
+    Breadcrumb,
+    ColorSelector,
+    PriceHistoryChart,
+    PriceStatsCards,
+    ProviderPriceTable,
+    SizeSelector,
+    TIME_RANGES,
+    generateMockPriceHistory,
+} from '@/components/product';
+import type { ProviderPrice, TimeRangeKey, PriceStats } from '@/components/product';
 import { Button } from '@/components/ui/buttons/Button';
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
+
+// Mock satıcı fiyatları üretici - API entegrasyonu olduğunda kaldırılacak
+const generateMockProviderPrices = (basePrice: number): ProviderPrice[] => {
+    const providers = [
+        { name: 'Amazon', rating: 4.8, shippingDays: 2 },
+        { name: 'Trendyol', rating: 4.6, shippingDays: 3 },
+        { name: 'Hepsiburada', rating: 4.5, shippingDays: 2 },
+        { name: 'N11', rating: 4.3, shippingDays: 4 },
+        { name: 'GittiGidiyor', rating: 4.2, shippingDays: 3 },
+    ];
+
+    return providers
+        .map((p, i) => ({
+            id: i + 1,
+            provider: p.name,
+            price: Math.round(basePrice * (1 + (Math.random() - 0.3) * 0.2)),
+            originalPrice: Math.round(basePrice * 1.2 * (1 + Math.random() * 0.1)),
+            inStock: Math.random() > 0.2,
+            rating: p.rating,
+            shippingDays: p.shippingDays,
+        }))
+        .sort((a, b) => a.price - b.price);
+};
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -21,6 +56,8 @@ export default function ProductDetailPage() {
     const [product, setProduct] = useState<ProductSearchResult | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
+    const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRangeKey>('1m');
 
     // Ürünü API'den çek
     const fetchProduct = useCallback(async () => {
@@ -35,9 +72,11 @@ export default function ProductDetailPage() {
 
         try {
             const result = await searchService.getProductById(productId);
-
             if (result.success) {
                 setProduct(result.data);
+                if (result.data.colors.length > 0) {
+                    setSelectedColor(result.data.colors[0]);
+                }
             } else {
                 setError('Ürün bulunamadı');
             }
@@ -52,6 +91,48 @@ export default function ProductDetailPage() {
     useEffect(() => {
         fetchProduct();
     }, [fetchProduct]);
+
+    // Computed values
+    const providerPrices = useMemo(() => {
+        if (!product?.lowest_price) return [];
+        return generateMockProviderPrices(product.lowest_price);
+    }, [product?.lowest_price]);
+
+    const priceHistory = useMemo(() => {
+        if (!product?.lowest_price) return [];
+        const range = TIME_RANGES.find((r) => r.key === selectedTimeRange);
+        return generateMockPriceHistory(product.lowest_price, range?.days || 30);
+    }, [product?.lowest_price, selectedTimeRange]);
+
+    const lowestPrice = useMemo(() => {
+        if (providerPrices.length === 0) return null;
+        return providerPrices.reduce((min, p) => (p.price < min.price ? p : min), providerPrices[0]);
+    }, [providerPrices]);
+
+    const priceStats: PriceStats | null = useMemo(() => {
+        if (priceHistory.length === 0) return null;
+        const prices = priceHistory.map((p) => p.price);
+        return {
+            min: Math.min(...prices),
+            max: Math.max(...prices),
+            avg: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
+            current: prices[prices.length - 1],
+        };
+    }, [priceHistory]);
+
+    const discountPercentage = useMemo(() => {
+        if (!product?.original_price || !product?.lowest_price) return product?.discount_percentage || 0;
+        return Math.round(((product.original_price - product.lowest_price) / product.original_price) * 100);
+    }, [product]);
+
+    // Handlers
+    const handleProviderClick = (provider: ProviderPrice) => {
+        if (provider.url) {
+            window.open(provider.url, '_blank');
+        } else {
+            alert(`${provider.provider} satıcısına yönlendiriliyorsunuz...`);
+        }
+    };
 
     // Loading state
     if (isLoading) {
@@ -70,13 +151,10 @@ export default function ProductDetailPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
-                        <svg className="w-10 h-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
                     <Heading level={2}>Ürün Bulunamadı</Heading>
-                    <Text color="muted" className="mt-2">{error || 'Bu ürün mevcut değil veya kaldırılmış olabilir.'}</Text>
+                    <Text color="muted" className="mt-2">
+                        {error || 'Bu ürün mevcut değil veya kaldırılmış olabilir.'}
+                    </Text>
                     <Link href="/product">
                         <Button variant="solid" className="mt-4">Ürünlere Dön</Button>
                     </Link>
@@ -85,29 +163,24 @@ export default function ProductDetailPage() {
         );
     }
 
-    // İndirim yüzdesini hesapla
-    const discountPercentage = product.original_price && product.lowest_price
-        ? Math.round(((product.original_price - product.lowest_price) / product.original_price) * 100)
-        : product.discount_percentage || 0;
+    // Breadcrumb items
+    const breadcrumbItems = [
+        { label: 'Ana Sayfa', href: '/' },
+        { label: 'Ürünler', href: '/product' },
+        { label: product.name },
+    ];
 
     return (
         <div className="min-h-screen bg-background py-8">
             <Container size="lg">
                 {/* Breadcrumb */}
-                <nav className="mb-6">
-                    <div className="flex items-center gap-2 text-sm">
-                        <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Ana Sayfa</Link>
-                        <span className="text-muted-foreground">/</span>
-                        <Link href="/product" className="text-muted-foreground hover:text-primary transition-colors">Ürünler</Link>
-                        <span className="text-muted-foreground">/</span>
-                        <span className="text-foreground">{product.name}</span>
-                    </div>
-                </nav>
+                <Breadcrumb items={breadcrumbItems} />
 
                 {/* Ana İçerik */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Sol - Ürün Resmi */}
+                    {/* Sol - Ürün Resmi ve Seçenekler */}
                     <div className="bg-card rounded-2xl p-6 shadow-lg border border-border">
+                        {/* Ürün Resmi */}
                         <div className="relative aspect-square rounded-xl overflow-hidden bg-background">
                             <Image
                                 src={product.image_url || `https://picsum.photos/seed/${product.id}/600/600`}
@@ -116,60 +189,23 @@ export default function ProductDetailPage() {
                                 className="object-cover"
                                 sizes="(max-width: 768px) 100vw, 50vw"
                             />
-                            {/* İndirim Badge */}
                             {discountPercentage > 0 && (
-                                <div className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-full flex items-center gap-1">
+                                <div className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-full">
                                     🔥 %{discountPercentage} İndirim
                                 </div>
                             )}
                         </div>
 
-                        {/* Özellikler Grid */}
-                        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
-                            {product.colors.length > 0 && (
-                                <div className="text-center">
-                                    <Text size="sm" color="muted">Renkler</Text>
-                                    <div className="flex flex-wrap justify-center gap-1 mt-1">
-                                        {product.colors.slice(0, 3).map((color, i) => (
-                                            <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
-                                                {color}
-                                            </span>
-                                        ))}
-                                        {product.colors.length > 3 && (
-                                            <span className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full">
-                                                +{product.colors.length - 3}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                            {product.sizes.length > 0 && (
-                                <div className="text-center">
-                                    <Text size="sm" color="muted">Bedenler</Text>
-                                    <div className="flex flex-wrap justify-center gap-1 mt-1">
-                                        {product.sizes.map((size, i) => (
-                                            <span key={i} className="px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded-full">
-                                                {size}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            <div className="text-center">
-                                <Text size="sm" color="muted">Stok</Text>
-                                <div className="mt-1">
-                                    {product.in_stock ? (
-                                        <span className="px-2 py-0.5 bg-success/10 text-success text-xs rounded-full">
-                                            ✓ Stokta
-                                        </span>
-                                    ) : (
-                                        <span className="px-2 py-0.5 bg-danger/10 text-danger text-xs rounded-full">
-                                            ✗ Tükendi
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        {/* Renk Seçimi */}
+                        <ColorSelector
+                            colors={product.colors}
+                            selectedColor={selectedColor}
+                            onColorSelect={setSelectedColor}
+                            className="mt-4"
+                        />
+
+                        {/* Beden Seçimi */}
+                        <SizeSelector sizes={product.sizes} className="mt-4" />
                     </div>
 
                     {/* Sağ - Ürün Bilgileri */}
@@ -186,9 +222,9 @@ export default function ProductDetailPage() {
                             </div>
                             <Heading level={1} size="3xl">{product.name}</Heading>
                             {product.brand && (
-                                <div className="flex items-center gap-3 mt-2">
-                                    <Text weight="semibold" color="primary">{product.brand}</Text>
-                                </div>
+                                <Text weight="semibold" color="primary" className="mt-2">
+                                    {product.brand}
+                                </Text>
                             )}
                         </div>
 
@@ -200,79 +236,39 @@ export default function ProductDetailPage() {
                             </div>
                         )}
 
-                        {/* Özellikler */}
-                        <div className="bg-card rounded-xl p-4 border border-border">
-                            <Text size="sm" weight="semibold" className="mb-3">Ürün Özellikleri</Text>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex justify-between items-center py-2 px-3 bg-background rounded-lg">
-                                    <Text size="sm" color="muted">Marka</Text>
-                                    <Text size="sm" weight="medium">{product.brand || '-'}</Text>
-                                </div>
-                                <div className="flex justify-between items-center py-2 px-3 bg-background rounded-lg">
-                                    <Text size="sm" color="muted">Kategori</Text>
-                                    <Text size="sm" weight="medium">{product.category_name || '-'}</Text>
-                                </div>
-                                <div className="flex justify-between items-center py-2 px-3 bg-background rounded-lg">
-                                    <Text size="sm" color="muted">Para Birimi</Text>
-                                    <Text size="sm" weight="medium">{product.currency_code}</Text>
-                                </div>
-                                <div className="flex justify-between items-center py-2 px-3 bg-background rounded-lg">
-                                    <Text size="sm" color="muted">Cinsiyet</Text>
-                                    <Text size="sm" weight="medium">{product.gender || 'Unisex'}</Text>
-                                </div>
-                                {product.materials.length > 0 && (
-                                    <div className="flex justify-between items-center py-2 px-3 bg-background rounded-lg col-span-2">
-                                        <Text size="sm" color="muted">Malzeme</Text>
-                                        <Text size="sm" weight="medium">{product.materials.join(', ')}</Text>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        {/* En İyi Fiyat */}
+                        {lowestPrice && (
+                            <BestPriceCard
+                                price={lowestPrice.price}
+                                originalPrice={lowestPrice.originalPrice}
+                                provider={lowestPrice.provider}
+                                discountPercentage={discountPercentage}
+                                inStock={lowestPrice.inStock}
+                                onBuyClick={() => handleProviderClick(lowestPrice)}
+                            />
+                        )}
 
-                        {/* Fiyat Bilgisi */}
-                        <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6 border border-primary/20">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <Caption>En Düşük Fiyat</Caption>
-                                    <div className="flex items-baseline gap-3 mt-1">
-                                        <Text size="3xl" weight="bold" color="primary">
-                                            ₺{(product.lowest_price || 0).toLocaleString('tr-TR')}
-                                        </Text>
-                                        {product.original_price && product.original_price > (product.lowest_price || 0) && (
-                                            <Text size="lg" color="muted" lineThrough>
-                                                ₺{product.original_price.toLocaleString('tr-TR')}
-                                            </Text>
-                                        )}
-                                    </div>
-                                    {discountPercentage > 0 && (
-                                        <Text size="sm" className="text-success mt-1">
-                                            %{discountPercentage} tasarruf edin!
-                                        </Text>
-                                    )}
-                                </div>
-                                <Button variant="gradient" size="lg" disabled={!product.in_stock}>
-                                    {product.in_stock ? 'Satın Al' : 'Stokta Yok'}
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Bilgi Notu */}
-                        <div className="bg-card rounded-xl p-4 border border-border">
-                            <div className="flex items-start gap-3">
-                                <span className="text-2xl">💡</span>
-                                <div>
-                                    <Text size="sm" weight="semibold">Fiyat Karşılaştırma</Text>
-                                    <Text size="sm" color="muted">
-                                        Bu fiyat, farklı satıcılar arasındaki en düşük fiyatı gösterir.
-                                        Satın almadan önce stok durumunu kontrol etmenizi öneririz.
-                                    </Text>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Fiyat İstatistikleri */}
+                        {priceStats && <PriceStatsCards stats={priceStats} />}
                     </div>
                 </div>
 
-                {/* Benzer Ürünler - İleride eklenebilir */}
+                {/* Satıcı Fiyat Karşılaştırma Tablosu */}
+                <ProviderPriceTable
+                    prices={providerPrices}
+                    onProviderClick={handleProviderClick}
+                    className="mt-8"
+                />
+
+                {/* Fiyat Geçmişi Grafiği */}
+                <PriceHistoryChart
+                    data={priceHistory}
+                    selectedTimeRange={selectedTimeRange}
+                    onTimeRangeChange={setSelectedTimeRange}
+                    className="mt-8"
+                />
+
+                {/* Geri Dön */}
                 <div className="mt-12">
                     <Link
                         href="/product"
