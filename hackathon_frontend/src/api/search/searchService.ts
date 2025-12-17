@@ -155,6 +155,14 @@ export const searchService = {
                 sizes: backendData.available_sizes ?? [],
                 materials: [],
                 discount_percentage: backendData.best_price?.discount_percentage ?? null,
+
+                // Product details
+                price_history: backendData.price_history ?? [],
+                provider_prices: backendData.provider_prices ?? [],
+                provider_count: backendData.provider_count,
+                available_colors: backendData.available_colors ?? [],
+                available_sizes: backendData.available_sizes ?? [],
+                best_price: backendData.best_price?.price ?? null,
             };
 
             return {
