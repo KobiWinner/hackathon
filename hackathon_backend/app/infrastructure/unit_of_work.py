@@ -8,6 +8,7 @@ from app.infrastructure.repositories.category_repository import CategoryReposito
 from app.infrastructure.repositories.conversation_repository import (
     ConversationRepository,
 )
+from app.infrastructure.repositories.currency_repository import CurrencyRepository
 from app.infrastructure.repositories.message_repository import MessageRepository
 from app.infrastructure.repositories.price_history_repository import (
     PriceHistoryRepository,
@@ -16,7 +17,6 @@ from app.infrastructure.repositories.product_mapping_repository import (
     ProductMappingRepository,
 )
 from app.infrastructure.repositories.role_repository import RoleRepository
-from app.infrastructure.repositories.user_repository import UserRepository
 from app.infrastructure.repositories.user_repository import UserRepository
 from app.infrastructure.repositories.provider_repository import ProviderRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
@@ -64,6 +64,10 @@ class UnitOfWork(IUnitOfWork):
     @property
     def roles(self) -> RoleRepository:
         return RoleRepository(self.db)
+
+    @property
+    def currencies(self) -> CurrencyRepository:
+        return CurrencyRepository(self.db)
 
     @property
     def price_histories(self) -> PriceHistoryRepository:

@@ -5,7 +5,6 @@ from fastapi import APIRouter
 
 from app.core.infrastructure.cache import get_cache
 from app.core.infrastructure.circuit_breaker import get_all_circuit_stats
-from app.infrastructure.mocker_client import MockerClient
 
 router = APIRouter(prefix="/health", tags=["Health & Monitoring"])
 

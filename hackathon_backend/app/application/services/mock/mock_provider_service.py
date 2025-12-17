@@ -1,18 +1,17 @@
 """
-Tüm Provider Servisleri - Mock API'ler için iş mantığı
-Aynı ürünler farklı provider'larda farklı fiyatlarla bulunabilir.
+Mock Provider Services - Internal mock API implementations.
+Replaces external mocker service with internal implementations.
+Uses UnifiedProduct schema for standardized output.
 """
 import random
 import asyncio
 from datetime import datetime
-from faker import Faker
-from fastapi import HTTPException
+from typing import List
 
-fake_en = Faker('en_US')
-Faker.seed(42)
+from app.domain.schemas.product import UnifiedProduct, Provider
 
 # ============== MASTER PRODUCT CATALOG ==============
-# Tüm provider'ların erişebildiği ana ürün havuzu
+# All products available across providers
 
 BRANDS = {
     "Kamp": ["NorthFace", "MSR", "Deuter", "Mammut", "Coleman", "Black Diamond", "Osprey"],
@@ -82,48 +81,61 @@ MASTER_PRODUCTS = [
 COLORS = ["Siyah", "Beyaz", "Mavi", "Kırmızı", "Yeşil", "Turuncu", "Gri", "Lacivert"]
 EXCHANGE_RATES = {"GBP": 1.0, "USD": 1.27, "EUR": 1.17, "TRY": 40.50}
 
-# Her provider hangi ürünlere erişebilir (SKU listesi)
-PROVIDER_PRODUCT_ACCESS = {
-    "SportDirect": {
+# Provider product access configuration
+PROVIDER_CONFIGS = {
+    Provider.SPORT_DIRECT: {
+        "slug": "sport-direct",
+        "currency": "GBP",
+        "error_rate": 0.01,
         "skus": ["RUN-001", "RUN-002", "RUN-003", "RUN-004", "RUN-005", "RUN-006",
                  "BIKE-001", "BIKE-002", "BIKE-003", "BIKE-004", "BIKE-005",
                  "FIT-001", "FIT-002", "FIT-003", "FIT-004",
-                 "CAMP-001", "CAMP-003", "CAMP-007"],  # Bazı kamp ürünleri de var
+                 "CAMP-001", "CAMP-003", "CAMP-007"],
         "price_modifier": 1.0,
-        "stock_modifier": 1.2,  # Daha fazla stok
+        "stock_modifier": 1.2,
     },
-    "OutdoorPro": {
+    Provider.OUTDOOR_PRO: {
+        "slug": "outdoor-pro",
+        "currency": "USD",
+        "error_rate": 0.05,
         "skus": ["CAMP-001", "CAMP-002", "CAMP-003", "CAMP-004", "CAMP-005", "CAMP-006", "CAMP-007", "CAMP-008",
                  "CLIMB-001", "CLIMB-002", "CLIMB-003", "CLIMB-004", "CLIMB-005", "CLIMB-006", "CLIMB-007",
                  "WATER-001", "WATER-002", "WATER-003", "WATER-004",
-                 "RUN-004", "RUN-005"],  # Bazı koşu ürünleri de var
+                 "RUN-004", "RUN-005"],
         "price_modifier": 1.05,
         "stock_modifier": 1.0,
     },
-    "DagSpor": {
+    Provider.DAG_SPOR: {
+        "slug": "dag-spor",
+        "currency": "TRY",
+        "error_rate": 0.15,
         "skus": ["CLIMB-001", "CLIMB-002", "CLIMB-003", "CLIMB-004", "CLIMB-005", "CLIMB-006", "CLIMB-007",
                  "CAMP-001", "CAMP-002", "CAMP-003", "CAMP-004", "CAMP-005", "CAMP-006", "CAMP-007", "CAMP-008",
                  "SKI-001", "SKI-002", "SKI-003", "SKI-004", "SKI-005"],
-        "price_modifier": 0.85,  # TL ucuz
-        "stock_modifier": 0.7,   # Daha az stok
+        "price_modifier": 0.85,
+        "stock_modifier": 0.7,
     },
-    "AlpineGear": {
+    Provider.ALPINE_GEAR: {
+        "slug": "alpine-gear",
+        "currency": "EUR",
+        "error_rate": 0.30,
         "skus": ["SKI-001", "SKI-002", "SKI-003", "SKI-004", "SKI-005",
                  "CLIMB-001", "CLIMB-003", "CLIMB-006", "CLIMB-007",
-                 "CAMP-002", "CAMP-004"],  # Premium ürünler
-        "price_modifier": 1.15,  # Premium fiyat
-        "stock_modifier": 0.5,   # Az stok (nadir)
+                 "CAMP-002", "CAMP-004"],
+        "price_modifier": 1.15,
+        "stock_modifier": 0.5,
     },
 }
 
 
 class ProductGenerator:
-    """Provider'a özgü ürün üretici - Ortak ürün havuzundan"""
+    """Generate mock products for providers."""
     
     _cache: dict = {}
     
     @classmethod
     def get_master_product(cls, sku: str) -> dict | None:
+        """Get a master product by SKU."""
         for p in MASTER_PRODUCTS:
             if p["sku"] == sku:
                 return p.copy()
@@ -131,167 +143,107 @@ class ProductGenerator:
     
     @classmethod
     def generate_price(cls, base_price: float, currency: str, modifier: float = 1.0) -> float:
+        """Generate a price with currency conversion and variation."""
         rate = EXCHANGE_RATES.get(currency, 1.0)
-        variation = random.uniform(0.97, 1.03)  # ±%3 fiyat değişimi
+        variation = random.uniform(0.97, 1.03)  # ±3% price variation
         price = base_price * rate * modifier * variation
         endings = [0.99, 0.95, 0.00]
         return round(int(price) + random.choice(endings), 2)
     
     @classmethod
     def generate_stock(cls, modifier: float = 1.0) -> int:
+        """Generate random stock quantity."""
         base = random.randint(5, 100)
         return max(0, int(base * modifier))
+
+
+class MockProviderService:
+    """
+    Internal mock provider service.
+    Replaces external mocker API calls with direct function calls.
+    Returns standardized UnifiedProduct format.
+    """
+    
+    @staticmethod
+    async def _add_latency(min_s: float = 0.1, max_s: float = 0.5) -> None:
+        """Simulate network latency."""
+        await asyncio.sleep(random.uniform(min_s, max_s))
     
     @classmethod
-    def get_products_for_provider(cls, provider_name: str) -> list[dict]:
-        cache_key = f"{provider_name}_products"
-        if cache_key in cls._cache:
-            return cls._cache[cache_key]
+    async def _get_products_for_provider(cls, provider: Provider) -> List[UnifiedProduct]:
+        """Generate products for a specific provider."""
+        config = PROVIDER_CONFIGS[provider]
+        collected_at = datetime.utcnow()
         
-        config = PROVIDER_PRODUCT_ACCESS[provider_name]
+        # Simulate latency
+        await cls._add_latency()
+        
+        # Set seed for consistent randomness per provider
+        random.seed(hash(provider.value))
+        
         products = []
-        
-        random.seed(hash(provider_name))  # Provider'a özgü tutarlı randomness
-        
         for idx, sku in enumerate(config["skus"], 1):
-            master = cls.get_master_product(sku)
-            if master:
-                products.append({
-                    "id": idx,
-                    "sku": sku,
-                    "name": master["name"],
-                    "brand": master["brand"],
-                    "category": master["category"],
-                    "subcategory": master["subcategory"],
-                    "color": random.choice(COLORS),
-                    "weight_kg": master["weight"],
-                    "base_price": master["base_price"],
-                    "price_modifier": config["price_modifier"],
-                    "stock_modifier": config["stock_modifier"],
-                })
-        
-        random.seed()
-        cls._cache[cache_key] = products
-        return products
-
-
-# ============== ERROR SIMULATION ==============
-
-def _simulate_error(error_rate: float, provider_name: str) -> None:
-    if random.random() < error_rate:
-        if random.random() < 0.7:
-            raise HTTPException(status_code=429, detail={"error": "rate_limit_exceeded", "message": f"{provider_name} API rate limit exceeded", "retry_after": random.randint(30, 120)})
-        raise HTTPException(status_code=500, detail={"error": "internal_error", "message": f"{provider_name} API error"})
-
-
-async def _add_latency(min_s: float = 0.1, max_s: float = 0.5) -> None:
-    await asyncio.sleep(random.uniform(min_s, max_s))
-
-
-# ============== PROVIDER SERVICES ==============
-
-class SportDirectService:
-    """UK (GBP) - %1 hata - Koşu, Fitness, Bisiklet odaklı"""
-    ERROR_RATE, CURRENCY, PROVIDER_NAME = 0.01, "GBP", "SportDirect"
-
-    @classmethod
-    async def get_all_products(cls):
-        from app.domain.schemas.providers import SportDirectProduct, SportDirectResponse
-        _simulate_error(cls.ERROR_RATE, cls.PROVIDER_NAME)
-        await _add_latency()
-        
-        products = []
-        for p in ProductGenerator.get_products_for_provider(cls.PROVIDER_NAME):
-            stock = ProductGenerator.generate_stock(p["stock_modifier"])
-            products.append(SportDirectProduct(
-                product_id=p["id"],
-                product_name=p["name"],
-                brand=p["brand"],
-                category=p["category"],
-                subcategory=p["subcategory"],
-                colour=p["color"],
-                weight_kg=p["weight_kg"],
-                price_gbp=ProductGenerator.generate_price(p["base_price"], cls.CURRENCY, p["price_modifier"]),
-                stock_quantity=stock,
-                in_stock=stock > 0,
-                last_updated=datetime.utcnow().isoformat()
-            ))
-        return SportDirectResponse(provider=cls.PROVIDER_NAME, currency=cls.CURRENCY, total_products=len(products), timestamp=datetime.utcnow().isoformat(), products=products)
-
-
-class OutdoorProService:
-    """US (USD) - %5 hata - Kamp, Dağcılık, Su Sporları odaklı"""
-    ERROR_RATE, CURRENCY, PROVIDER_NAME = 0.05, "USD", "OutdoorPro"
-
-    @classmethod
-    async def get_all_products(cls):
-        from app.domain.schemas.providers import OutdoorProItem, OutdoorProResponse
-        _simulate_error(cls.ERROR_RATE, cls.PROVIDER_NAME)
-        await _add_latency()
-        
-        items = []
-        for p in ProductGenerator.get_products_for_provider(cls.PROVIDER_NAME):
-            stock = ProductGenerator.generate_stock(p["stock_modifier"])
-            items.append(OutdoorProItem(
-                id=p["id"],
-                name=p["name"],
-                brand=p["brand"],
-                category=p["category"],
-                price=ProductGenerator.generate_price(p["base_price"], cls.CURRENCY, p["price_modifier"]),
-                currency=cls.CURRENCY,
+            master = ProductGenerator.get_master_product(sku)
+            if not master:
+                continue
+            
+            stock = ProductGenerator.generate_stock(config["stock_modifier"])
+            price = ProductGenerator.generate_price(
+                master["base_price"], 
+                config["currency"], 
+                config["price_modifier"]
+            )
+            
+            products.append(UnifiedProduct(
+                provider=provider,
+                provider_product_id=str(idx),
+                name=master["name"],
+                description=f"{master['brand']} - {master['category']}",
+                price=price,
+                currency=config["currency"],
                 stock=stock,
-                available=stock > 0
+                collected_at=collected_at
             ))
-        return OutdoorProResponse(source=cls.PROVIDER_NAME, fetched_at=datetime.utcnow().isoformat(), count=len(items), items=items)
-
-
-class DagSporService:
-    """TR (TRY) - %15 hata - Dağcılık, Kamp, Kış Sporları odaklı"""
-    ERROR_RATE, CURRENCY, PROVIDER_NAME = 0.15, "TRY", "DagSpor"
-
-    @classmethod
-    async def get_all_products(cls):
-        from app.domain.schemas.providers import DagSporUrun, DagSporYanit
-        _simulate_error(cls.ERROR_RATE, cls.PROVIDER_NAME)
-        await _add_latency()
         
-        urunler = []
-        for p in ProductGenerator.get_products_for_provider(cls.PROVIDER_NAME):
-            stok = ProductGenerator.generate_stock(p["stock_modifier"])
-            urunler.append(DagSporUrun(
-                urun_id=p["id"],
-                urun_adi=p["name"],
-                marka=p["brand"],
-                kategori=p["category"],
-                alt_kategori=p["subcategory"],
-                renk=p["color"],
-                fiyat=ProductGenerator.generate_price(p["base_price"], cls.CURRENCY, p["price_modifier"]),
-                para_birimi=cls.CURRENCY,
-                stok_adedi=stok,
-                stokta_var=stok > 0,
-                son_guncelleme=datetime.utcnow().isoformat()
-            ))
-        return DagSporYanit(tedarikci=cls.PROVIDER_NAME, toplam_urun=len(urunler), tarih=datetime.utcnow().isoformat(), urunler=urunler)
-
-
-class AlpineGearService:
-    """EU (EUR) - %30 hata - Kış Sporları, Premium Dağcılık odaklı"""
-    ERROR_RATE, CURRENCY, PROVIDER_NAME = 0.30, "EUR", "AlpineGear"
-
-    @classmethod
-    async def get_all_products(cls):
-        from app.domain.schemas.providers import AlpineGearProduct, AlpineGearCatalog
-        _simulate_error(cls.ERROR_RATE, cls.PROVIDER_NAME)
-        await asyncio.sleep(random.uniform(0.3, 1.0))
+        # Reset random seed
+        random.seed()
         
-        catalog = []
-        for p in ProductGenerator.get_products_for_provider(cls.PROVIDER_NAME):
-            qty = ProductGenerator.generate_stock(p["stock_modifier"])
-            catalog.append(AlpineGearProduct(
-                sku=p["id"],
-                title=p["name"],
-                manufacturer=p["brand"],
-                price_eur=ProductGenerator.generate_price(p["base_price"], cls.CURRENCY, p["price_modifier"]),
-                qty=qty
-            ))
-        return AlpineGearCatalog(vendor=cls.PROVIDER_NAME, catalog_date=datetime.utcnow().strftime("%Y-%m-%d"), product_count=len(catalog), catalog=catalog)
+        return products
+    
+    @classmethod
+    async def get_sport_direct_products(cls) -> List[UnifiedProduct]:
+        """SportDirect - UK/GBP - 1% error rate."""
+        return await cls._get_products_for_provider(Provider.SPORT_DIRECT)
+    
+    @classmethod
+    async def get_outdoor_pro_products(cls) -> List[UnifiedProduct]:
+        """OutdoorPro - US/USD - 5% error rate."""
+        return await cls._get_products_for_provider(Provider.OUTDOOR_PRO)
+    
+    @classmethod
+    async def get_dag_spor_products(cls) -> List[UnifiedProduct]:
+        """DagSpor - TR/TRY - 15% error rate."""
+        return await cls._get_products_for_provider(Provider.DAG_SPOR)
+    
+    @classmethod
+    async def get_alpine_gear_products(cls) -> List[UnifiedProduct]:
+        """AlpineGear - EU/EUR - 30% error rate."""
+        return await cls._get_products_for_provider(Provider.ALPINE_GEAR)
+    
+    @classmethod
+    async def get_all_products(cls) -> List[UnifiedProduct]:
+        """Get products from all providers."""
+        results = await asyncio.gather(
+            cls.get_sport_direct_products(),
+            cls.get_outdoor_pro_products(),
+            cls.get_dag_spor_products(),
+            cls.get_alpine_gear_products(),
+            return_exceptions=True
+        )
+        
+        all_products = []
+        for result in results:
+            if isinstance(result, list):
+                all_products.extend(result)
+        
+        return all_products

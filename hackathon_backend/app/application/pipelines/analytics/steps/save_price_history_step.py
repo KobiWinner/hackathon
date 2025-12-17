@@ -16,16 +16,21 @@ class SavePriceHistoryStep(BaseStep):
     Normalize edilmiş ve mapping_id atanmış ürünlerin fiyatlarını
     price_histories tablosuna kaydeder.
 
-    Input: List of products with mapping_id, price, original_price
+    Input: List of products with mapping_id, price, original_price, currency
     Output: Same products (unchanged), saved records in meta
     """
 
-    # TRY currency_id - veritabanında önceden tanımlı olmalı
-    DEFAULT_CURRENCY_ID = 1  # TRY
-
-    def __init__(self, uow: IUnitOfWork, currency_id: int = 1) -> None:
+    def __init__(self, uow: IUnitOfWork) -> None:
         self.uow = uow
-        self.currency_id = currency_id
+        self._currency_cache: Dict[str, int] = {}
+
+    async def _get_currency_id(self, currency_code: str) -> int | None:
+        """Currency kodundan ID'yi çözer, cache kullanır."""
+        if not self._currency_cache:
+            # Tüm currency'leri bir kez yükle
+            currencies = await self.uow.currencies.get_all()
+            self._currency_cache = {c.code: c.id for c in currencies}
+        return self._currency_cache.get(currency_code.upper())
 
     async def process(self, context: PipelineContext) -> None:
         products: List[Dict[str, Any]] = context.data
@@ -49,6 +54,13 @@ class SavePriceHistoryStep(BaseStep):
                 errors.append(f"Mapping {mapping_id}: price eksik.")
                 continue
 
+            # Currency kodundan ID çöz
+            currency_code = product.get("currency", "TRY")
+            currency_id = await self._get_currency_id(currency_code)
+            if not currency_id:
+                errors.append(f"Mapping {mapping_id}: currency '{currency_code}' bulunamadı.")
+                continue
+
             try:
                 record = PriceHistoryCreate(
                     mapping_id=mapping_id,
@@ -59,7 +71,7 @@ class SavePriceHistoryStep(BaseStep):
                         else None
                     ),
                     discount_rate=product.get("discount_rate"),
-                    currency_id=self.currency_id,
+                    currency_id=currency_id,
                     in_stock=product.get("in_stock", True),
                     stock_quantity=product.get("stock_quantity"),
                 )
@@ -85,3 +97,4 @@ class SavePriceHistoryStep(BaseStep):
 
         # Data değişmez, sadece kaydedildi
         context.result = context.data
+
