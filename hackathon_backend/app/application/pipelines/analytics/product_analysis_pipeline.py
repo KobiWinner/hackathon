@@ -7,6 +7,9 @@ from app.application.pipelines.analytics.steps.match_product_step import (
 from app.application.pipelines.analytics.steps.normalize_currency_step import (
     NormalizeCurrencyStep,
 )
+from app.application.pipelines.analytics.steps.reliability_weighting_step import (
+    ReliabilityWeightingStep,
+)
 from app.application.pipelines.analytics.steps.save_price_history_step import (
     SavePriceHistoryStep,
 )
@@ -32,6 +35,10 @@ class ProductAnalysisPipeline(BasePipeline):
     3. SavePriceHistoryStep: Fiyat geçmişini kaydeder
     4. TrendAnalysisStep: Fiyat trendini analiz eder
     5. UpdateTrendingStep: Top 5 trending ürünü kaydeder
+    3. MatchProductStep: Ürün eşleştirmesi yapar
+    4. SavePriceHistoryStep: Fiyat geçmişini kaydeder
+    5. TrendAnalysisStep: Fiyat trendini analiz eder
+    6. ReliabilityWeightingStep: Provider güvenilirlik ağırlıklandırması
     """
 
     def __init__(self, uow: IUnitOfWork, currency_service: ICurrencyService) -> None:
@@ -43,13 +50,13 @@ class ProductAnalysisPipeline(BasePipeline):
         # Adım 2: Provider Mapping Bul veya Oluştur
         self.add_step(FindOrCreateMappingStep(uow))
 
-        # Adım 2.1: Ürün Eşleştirme (Product Matching)
+        # Adım 3: Ürün Eşleştirme (Product Matching)
         self.add_step(MatchProductStep(uow))
 
-        # Adım 3: Fiyat Geçmişini Kaydet
+        # Adım 4: Fiyat Geçmişini Kaydet
         self.add_step(SavePriceHistoryStep(uow))
 
-        # Adım 4: Trend Analizi
+        # Adım 5: Trend Analizi
         self.add_step(TrendAnalysisStep(uow))
 
         # Adım 5: Trending Ürünleri Güncelle
@@ -57,3 +64,5 @@ class ProductAnalysisPipeline(BasePipeline):
 
 
 
+        # Adım 6: Güvenilirlik Ağırlıklandırması
+        self.add_step(ReliabilityWeightingStep(uow))
