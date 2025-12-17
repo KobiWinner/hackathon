@@ -228,14 +228,33 @@ export default function ProductListPage() {
                         <div className="absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-background animate-slide-in-left">
                             <div className="flex items-center justify-between p-4 border-b border-border">
                                 <Text size="lg" weight="bold">Filtreler</Text>
-                                <button
-                                    onClick={() => setIsMobileFilterOpen(false)}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                                >
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {activeFilterCount > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                setActiveFilters({
+                                                    categories: [],
+                                                    brands: [],
+                                                    minPrice: '',
+                                                    maxPrice: '',
+                                                    sortBy: '',
+                                                });
+                                                setIsMobileFilterOpen(false);
+                                            }}
+                                            className="text-xs px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-full font-medium transition-colors"
+                                        >
+                                            Temizle
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => setIsMobileFilterOpen(false)}
+                                        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                             <div className="h-[calc(100vh-80px)] overflow-y-auto">
                                 <ProductFilter
@@ -274,6 +293,21 @@ export default function ProductListPage() {
                                     <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
                                         {activeFilterCount} filtre aktif
                                     </span>
+                                    <button
+                                        onClick={() => setActiveFilters({
+                                            categories: [],
+                                            brands: [],
+                                            minPrice: '',
+                                            maxPrice: '',
+                                            sortBy: '',
+                                        })}
+                                        className="text-xs px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-full font-medium transition-colors flex items-center gap-1"
+                                    >
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Temizle
+                                    </button>
                                 </div>
                             )}
                         </div>

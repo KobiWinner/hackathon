@@ -187,14 +187,6 @@ export function PriceHistoryChart({
                             </Text>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-2xl">💡</span>
-                        <Text size="sm" color="muted">
-                            {stats.current <= stats.avg
-                                ? 'Şu anki fiyat ortalamanın altında, almak için iyi bir zaman!'
-                                : 'Fiyat ortalamanın üzerinde, biraz bekleyebilirsiniz.'}
-                        </Text>
-                    </div>
                 </div>
             )}
         </div>

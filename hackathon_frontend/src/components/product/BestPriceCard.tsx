@@ -55,7 +55,7 @@ export function BestPriceCard({
                     )}
                 </div>
                 <Button
-                    variant="gradient"
+                    variant="solid"
                     size="lg"
                     disabled={!inStock}
                     onClick={onBuyClick}
