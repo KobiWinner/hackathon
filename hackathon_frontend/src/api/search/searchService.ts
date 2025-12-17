@@ -27,7 +27,7 @@ const MAX_RECENT_SEARCHES = 5;
 /**
  * API çağrısı sonucu
  */
-type SearchApiResult<T> =
+export type SearchApiResult<T> =
     | { success: true; data: T }
     | { success: false; error: ApiError };
 
@@ -119,6 +119,30 @@ export const searchService = {
         }
 
         return [];
+    },
+
+    /**
+     * ID ile ürün detayı getir
+     * GET /api/v1/products/{id}
+     */
+    getProductById: async (
+        productId: number
+    ): Promise<SearchApiResult<ProductSearchResult>> => {
+        try {
+            const response = await httpClient.get<ProductSearchResult>(
+                `/api/v1/products/${productId}`
+            );
+
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: normalizeAxiosError(error),
+            };
+        }
     },
 
     /**
