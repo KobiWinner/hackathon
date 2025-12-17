@@ -13,6 +13,9 @@ from app.application.pipelines.analytics.steps.save_price_history_step import (
 from app.application.pipelines.analytics.steps.trend_analysis_step import (
     TrendAnalysisStep,
 )
+from app.application.pipelines.analytics.steps.update_trending_step import (
+    UpdateTrendingStep,
+)
 from app.application.pipelines.base import BasePipeline
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
 from app.domain.i_services.i_currency_service import ICurrencyService
@@ -28,6 +31,7 @@ class ProductAnalysisPipeline(BasePipeline):
     2. FindOrCreateMappingStep: Provider mapping'i bulur/oluşturur
     3. SavePriceHistoryStep: Fiyat geçmişini kaydeder
     4. TrendAnalysisStep: Fiyat trendini analiz eder
+    5. UpdateTrendingStep: Top 5 trending ürünü kaydeder
     """
 
     def __init__(self, uow: IUnitOfWork, currency_service: ICurrencyService) -> None:
@@ -48,7 +52,8 @@ class ProductAnalysisPipeline(BasePipeline):
         # Adım 4: Trend Analizi
         self.add_step(TrendAnalysisStep(uow))
 
-        # --- Gelecekteki Adımlar ---
-        # self.add_step(ArbitrageDetectionStep(...))
+        # Adım 5: Trending Ürünleri Güncelle
+        self.add_step(UpdateTrendingStep(uow))
+
 
 
