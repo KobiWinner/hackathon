@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -9,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 
 import { searchService } from '@/api/search';
 import type { ProductSearchResult } from '@/api/search';
-import { ProductFilter, type FilterValues, type FilterOption } from '@/components/ProductFilter';
+import { type FilterOption, type FilterValues, ProductFilter } from '@/components/ProductFilter';
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
@@ -178,9 +179,9 @@ export default function ProductListPage() {
         let count = 0;
         count += activeFilters.categories.length;
         count += activeFilters.brands.length;
-        if (activeFilters.minPrice) count++;
-        if (activeFilters.maxPrice) count++;
-        if (activeFilters.sortBy) count++;
+        if (activeFilters.minPrice) { count++; }
+        if (activeFilters.maxPrice) { count++; }
+        if (activeFilters.sortBy) { count++; }
         return count;
     }, [activeFilters]);
 
@@ -221,21 +222,43 @@ export default function ProductListPage() {
                     <div className="fixed inset-0 z-50 lg:hidden">
                         {/* Backdrop */}
                         <div
+                            role="button"
+                            tabIndex={0}
                             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                             onClick={() => setIsMobileFilterOpen(false)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setIsMobileFilterOpen(false); } }}
                         />
                         {/* Filter Panel */}
                         <div className="absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-background animate-slide-in-left">
                             <div className="flex items-center justify-between p-4 border-b border-border">
                                 <Text size="lg" weight="bold">Filtreler</Text>
-                                <button
-                                    onClick={() => setIsMobileFilterOpen(false)}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                                >
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {activeFilterCount > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                setActiveFilters({
+                                                    categories: [],
+                                                    brands: [],
+                                                    minPrice: '',
+                                                    maxPrice: '',
+                                                    sortBy: '',
+                                                });
+                                                setIsMobileFilterOpen(false);
+                                            }}
+                                            className="text-xs px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-full font-medium transition-colors"
+                                        >
+                                            Temizle
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => setIsMobileFilterOpen(false)}
+                                        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                             <div className="h-[calc(100vh-80px)] overflow-y-auto">
                                 <ProductFilter
@@ -274,6 +297,21 @@ export default function ProductListPage() {
                                     <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
                                         {activeFilterCount} filtre aktif
                                     </span>
+                                    <button
+                                        onClick={() => setActiveFilters({
+                                            categories: [],
+                                            brands: [],
+                                            minPrice: '',
+                                            maxPrice: '',
+                                            sortBy: '',
+                                        })}
+                                        className="text-xs px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-full font-medium transition-colors flex items-center gap-1"
+                                    >
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Temizle
+                                    </button>
                                 </div>
                             )}
                         </div>
