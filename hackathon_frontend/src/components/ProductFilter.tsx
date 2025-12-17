@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/buttons/Button';
 import { Input } from '@/components/ui/Input';
@@ -59,11 +59,11 @@ function CheckboxGroup({
     };
 
     return (
-        <div className="space-y-3">
-            <Text size="sm" weight="bold" className="text-foreground">
+        <div className="flex flex-col min-h-0">
+            <Text size="sm" weight="bold" className="text-foreground shrink-0 pb-2">
                 {label}
             </Text>
-            <div className="space-y-2">
+            <div className="space-y-1 overflow-y-auto max-h-32 pr-1">
                 {options.map((option) => (
                     <label
                         key={option.value}
@@ -125,11 +125,11 @@ function RadioGroup({
     onChange: (value: string) => void;
 }) {
     return (
-        <div className="space-y-3">
-            <Text size="sm" weight="bold" className="text-foreground">
+        <div className="flex flex-col min-h-0">
+            <Text size="sm" weight="bold" className="text-foreground shrink-0 pb-2">
                 {label}
             </Text>
-            <div className="space-y-2">
+            <div className="space-y-1 overflow-y-auto max-h-32 pr-1">
                 {options.map((option) => (
                     <label
                         key={option.value}
@@ -192,9 +192,9 @@ export function ProductFilter({
         let count = 0;
         count += filters.categories.length;
         count += filters.brands.length;
-        if (filters.minPrice) count++;
-        if (filters.maxPrice) count++;
-        if (filters.sortBy) count++;
+        if (filters.minPrice) {count++;}
+        if (filters.maxPrice) {count++;}
+        if (filters.sortBy) {count++;}
         return count;
     }, [filters]);
 
@@ -225,7 +225,7 @@ export function ProductFilter({
         <div
             className={cn(
                 'bg-gradient-to-br from-card via-card to-primary/5 rounded-2xl border border-border shadow-lg',
-                'sticky top-24',
+                'sticky top-24 max-h-[calc(100vh-120px)] flex flex-col',
                 className
             )}
         >
@@ -271,7 +271,7 @@ export function ProductFilter({
             </div>
 
             {/* Filter Content */}
-            <div className="p-4 space-y-6 max-h-[calc(100vh-250px)] overflow-y-auto">
+            <div className="p-4 space-y-6 overflow-y-auto flex-1 min-h-0 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                 {/* Kategoriler */}
                 <CheckboxGroup
                     label="Kategoriler"

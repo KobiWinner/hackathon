@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 
 import Link from 'next/link';
 

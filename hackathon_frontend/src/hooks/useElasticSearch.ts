@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { searchService } from '@/api/search';
-import type { ProductSearchResult, ProductSearchParams } from '@/api/search';
+import type { ProductSearchParams, ProductSearchResult } from '@/api/search';
 
 type UseElasticSearchOptions = {
     /** Debounce süresi (ms) */

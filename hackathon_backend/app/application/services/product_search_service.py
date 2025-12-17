@@ -202,6 +202,59 @@ class ProductSearchService:
             page_size=request.page_size,
         )
 
+    async def get_product_by_id(self, product_id: int) -> Optional[ProductSearchResult]:
+        """
+        ID ile ürün getir.
+
+        Elasticsearch'ten term query ile tek bir ürün getirir.
+        """
+        query = {
+            "term": {"id": product_id}
+        }
+
+        result = await self.search.search(
+            index=PRODUCTS_INDEX,
+            query=query,
+            from_=0,
+            size=1,
+        )
+
+        hits = result.get("hits", [])
+        if not hits:
+            return None
+
+        hit = hits[0]
+        try:
+            return ProductSearchResult(
+                id=hit.get("id", 0),
+                name=hit.get("name", ""),
+                slug=hit.get("slug"),
+                brand=hit.get("brand"),
+                category_id=hit.get("category_id"),
+                category_name=hit.get("category_name"),
+                gender=hit.get("gender"),
+                image_url=hit.get("image_url"),
+                description=hit.get("description"),
+                lowest_price=(
+                    Decimal(str(hit["lowest_price"]))
+                    if hit.get("lowest_price")
+                    else None
+                ),
+                original_price=(
+                    Decimal(str(hit["original_price"]))
+                    if hit.get("original_price")
+                    else None
+                ),
+                currency_code=hit.get("currency_code", "TRY"),
+                in_stock=hit.get("in_stock", True),
+                colors=hit.get("colors", []),
+                sizes=hit.get("sizes", []),
+                materials=hit.get("materials", []),
+            )
+        except Exception as e:
+            logger.warning("Failed to parse product", error=str(e), hit=hit)
+            return None
+
     async def delete_product(self, product_id: int) -> bool:
         """Ürünü index'ten sil."""
         return await self.search.delete_document(PRODUCTS_INDEX, str(product_id))

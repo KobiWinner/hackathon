@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.application.services.product_search_service import (
     ProductSearchService,
@@ -11,6 +11,7 @@ from app.application.services.product_search_service import (
 from app.domain.schemas.products.product_search import (
     ProductSearchRequest,
     ProductSearchResponse,
+    ProductSearchResult,
 )
 
 router = APIRouter()
@@ -52,6 +53,24 @@ async def search_products(
     return await search_service.search_products(request)
 
 
+@router.get("/products/{product_id}", response_model=ProductSearchResult)
+async def get_product_by_id(
+    product_id: int,
+    search_service: ProductSearchService = Depends(get_product_search_service),
+) -> ProductSearchResult:
+    """
+    Ürün detay endpoint'i.
+
+    Elasticsearch'ten ID ile ürün getirir.
+    """
+    product = await search_service.get_product_by_id(product_id)
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Ürün bulunamadı")
+    
+    return product
+
+
 @router.post("/search/reindex")
 async def reindex_products(
     search_service: ProductSearchService = Depends(get_product_search_service),
@@ -65,3 +84,4 @@ async def reindex_products(
     await search_service.ensure_index()
 
     return {"status": "ok", "message": "Index is ready"}
+
