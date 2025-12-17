@@ -19,7 +19,7 @@ sock.settimeout(2)
 result = sock.connect_ex((host, port))
 sock.close()
 exit(0 if result == 0 else 1)
-" 2>/dev/null; do
+" ; do
     echo "  Database not ready, waiting 2 seconds..."
     sleep 2
 done
@@ -45,7 +45,16 @@ echo "✅ Migrations completed!"
 
 # Uygulamayı başlat
 echo ""
-echo "=========================================="
-echo "  🎉 Starting FastAPI Application"
-echo "=========================================="
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+# Arguments var ise onları çalıştır (Worker için)
+if [ "$#" -gt 0 ]; then
+    echo "=========================================="
+    echo "  🚀 Starting Custom Command: $@"
+    echo "=========================================="
+    exec "$@"
+else
+    # Yoksa varsayılan olarak API'yi başlat
+    echo "=========================================="
+    echo "  🎉 Starting FastAPI Application"
+    echo "=========================================="
+    exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+fi

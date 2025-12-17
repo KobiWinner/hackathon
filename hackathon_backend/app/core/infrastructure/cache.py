@@ -49,3 +49,8 @@ class CacheService(ICacheService):
 
 # Singleton instance
 cache = CacheService()
+
+
+def get_cache() -> CacheService:
+    """Cache singleton instance döndürür."""
+    return cache

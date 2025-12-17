@@ -13,5 +13,12 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     # Görevleri otomatik bul (app/application/tasks/ klasörüne bakacak)
-    imports=["app.application.tasks.example_task"],
+    # Görevleri otomatik bul (app/application/tasks/ klasörüne bakacak)
+    imports=["app.application.tasks.example_task", "app.application.tasks.data_collector"],
+    beat_schedule={
+        "collect_data_every_5_minutes": {
+            "task": "app.application.tasks.data_collector.collect_data_task",
+            "schedule": 30.0,  # 30 saniye
+        },
+    },
 )

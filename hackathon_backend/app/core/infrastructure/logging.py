@@ -62,5 +62,9 @@ def setup_logging() -> Any:
     return structlog.get_logger()
 
 
+
+def get_logger() -> Any:
+    return structlog.get_logger()
+
 # Global logger instance
 logger = structlog.get_logger()

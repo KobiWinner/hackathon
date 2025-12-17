@@ -1,6 +1,9 @@
 from app.application.pipelines.analytics.steps.find_or_create_mapping_step import (
     FindOrCreateMappingStep,
 )
+from app.application.pipelines.analytics.steps.match_product_step import (
+    MatchProductStep,
+)
 from app.application.pipelines.analytics.steps.normalize_currency_step import (
     NormalizeCurrencyStep,
 )
@@ -35,6 +38,9 @@ class ProductAnalysisPipeline(BasePipeline):
 
         # Adım 2: Provider Mapping Bul veya Oluştur
         self.add_step(FindOrCreateMappingStep(uow))
+
+        # Adım 2.1: Ürün Eşleştirme (Product Matching)
+        self.add_step(MatchProductStep(uow))
 
         # Adım 3: Fiyat Geçmişini Kaydet
         self.add_step(SavePriceHistoryStep(uow))

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, Optional, Type, Any
 
 if TYPE_CHECKING:
     from app.domain.i_repositories.i_price_history_repository import (
@@ -60,4 +60,14 @@ class IUnitOfWork(ABC):
     @property
     @abstractmethod
     def product_mappings(self) -> "IProductMappingRepository":
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def providers(self) -> Any: # Type checking skipped for simplicity
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def products(self) -> Any:
         raise NotImplementedError

@@ -1,0 +1,199 @@
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:43:59.297636Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:43:59.301539Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:48:48.793827Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:48:48.894230Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:48:48.894571Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:48:48.894656Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:50:31.886084Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:50:31.889555Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:51:17.612144Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:51:17.712542Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:51:17.712805Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:51:17.712887Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:51:25.166670Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:51:25.168673Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:51:57.637235Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:51:57.737797Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:51:57.738179Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:51:57.738292Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:52:05.560336Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:52:05.562649Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:52:44.448351Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:52:44.550303Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:52:44.550946Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:52:44.551050Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:52:52.809789Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:52:52.811814Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:54:02.177888Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:54:02.278326Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:54:02.278647Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:54:02.278725Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:54:10.656768Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:54:10.658989Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:54:46.479317Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:54:46.579873Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:54:46.580575Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:54:46.580660Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:54:54.847316Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:54:54.849344Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:55:13.999337Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:55:14.099743Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:55:14.099969Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:55:14.100049Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:55:22.174048Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:55:22.175941Z"}
+{"event": "Shutting down", "level": "info", "timestamp": "2025-12-16T21:55:52.120635Z"}
+{"event": "Waiting for application shutdown.", "level": "info", "timestamp": "2025-12-16T21:55:52.221066Z"}
+{"event": "Application shutdown complete.", "level": "info", "timestamp": "2025-12-16T21:55:52.221296Z"}
+{"event": "Finished server process [1]", "level": "info", "timestamp": "2025-12-16T21:55:52.221371Z"}
+==========================================
+  🚀 Starting Application Setup
+==========================================
+⏳ Waiting for database to be ready...
+✅ Database is ready!
+
+ℹ️  Skipping auto-generate (production mode). Set AUTO_GENERATE_MIGRATIONS=true to enable.
+
+🔄 Running database migrations...
+✅ Migrations completed!
+
+==========================================
+  🎉 Starting FastAPI Application
+==========================================
+{"event": "Application startup complete.", "level": "info", "timestamp": "2025-12-16T21:56:04.666609Z"}
+{"event": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)", "level": "info", "timestamp": "2025-12-16T21:56:04.668544Z"}

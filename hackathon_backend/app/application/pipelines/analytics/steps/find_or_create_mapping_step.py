@@ -56,6 +56,7 @@ class FindOrCreateMappingStep(BaseStep):
                 # Add mapping_id to product
                 enriched = product.copy()
                 enriched["mapping_id"] = mapping.id
+                enriched["existing_product_id"] = mapping.product_id
                 enriched_products.append(enriched)
 
             except Exception as e:

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # DB 0: Cache
     # DB 1: Broker (Kuyruk)
     # DB 2: Result Backend
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:6380/0"
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
     # --- JWT Ayarları ---
@@ -33,6 +33,25 @@ class Settings(BaseSettings):
     # Virgülle ayrılmış origin listesi (örn: "http://localhost:3000,http://example.com")
     # Boş bırakılırsa varsayılan olarak localhost:3000 kullanılır
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # --- Provider API Ayarları ---
+    PROVIDER_BASE_URL: str = "http://localhost:8000/api/v1/providers"
+    
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def PROVIDER_ENDPOINTS(self) -> Dict[str, str]:
+        """Provider endpoint paths"""
+        return {
+            "sport-direct": "/sport-direct/products",
+            "outdoor-pro": "/outdoor-pro/products",
+            "dag-spor": "/dag-spor/products",
+            "alpine-gear": "/alpine-gear/products",
+        }
+    
+    # --- Data Collector Ayarları ---
+    COLLECTOR_TIMEOUT_SECONDS: float = 30.0
+    COLLECTOR_MAX_RETRIES: int = 3
+    COLLECTOR_CACHE_TTL_SECONDS: int = 300  # 5 dakika
+    
     # --- EXCHANGE RATE API ---
     EXCHANGE_RATE_API: str
 
@@ -60,3 +79,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # type: ignore
+
+
+def get_settings() -> Settings:
+    """Settings singleton instance döndürür."""
+    return settings
