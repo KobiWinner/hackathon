@@ -23,7 +23,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
     return (
         <Link
-            href={`/product/${product.slug}`}
+            href={`/product/${product.id}`}
             className={cn(
                 'group block bg-white rounded-2xl overflow-hidden',
                 'border border-border hover:border-primary/30',
