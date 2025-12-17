@@ -2,6 +2,35 @@
 // /api/v1/search endpoint'i ile uyumlu
 
 /**
+ * Fiyat geçmişi kaydı - Backend PriceHistoryItem ile uyumlu
+ */
+export type PriceHistoryItem = {
+    date: string;
+    price: string;
+    provider_id: number;
+    provider_name: string;
+};
+
+/**
+ * Sağlayıcı fiyat bilgisi - Backend ProviderPrice ile uyumlu
+ */
+export type ProviderPriceItem = {
+    provider_id: number;
+    provider_name: string;
+    provider_slug: string;
+    logo_url?: string | null;
+    rating: string;
+    is_verified: boolean;
+    current_price: string;
+    original_price: string;
+    discount_percentage?: number | null;
+    currency_code: string;
+    in_stock: boolean;
+    product_url?: string | null;
+    last_updated: string;
+};
+
+/**
  * Arama sonucu ürün bilgisi - Backend ProductSearchResult ile uyumlu
  */
 export type ProductSearchResult = {
@@ -22,6 +51,13 @@ export type ProductSearchResult = {
     sizes: string[];
     materials: string[];
     discount_percentage?: number | null;
+    // Product detail fields
+    price_history?: PriceHistoryItem[];
+    provider_prices?: ProviderPriceItem[];
+    best_price?: string | null;
+    provider_count?: number;
+    available_colors?: string[];
+    available_sizes?: string[];
 };
 
 /**
