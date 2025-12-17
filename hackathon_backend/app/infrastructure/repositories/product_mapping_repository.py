@@ -64,3 +64,13 @@ class ProductMappingRepository(BaseRepository, IProductMappingRepository):
             product_url=product_url,
         )
         return await self.create(obj_in=create_data, commit=False)  # type: ignore
+
+    async def get_orm(self, mapping_id: int) -> Optional[ProductMappingModel]:
+        """
+        ORM entity olarak mapping getirir (SQLAlchemy dirty tracking için).
+        Schema yerine doğrudan ORM entity döndürür.
+        """
+        result = await self.db.execute(
+            select(ProductMappingModel).where(ProductMappingModel.id == mapping_id)
+        )
+        return result.scalars().first()
