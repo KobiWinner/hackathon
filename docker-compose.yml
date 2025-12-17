@@ -36,7 +36,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
-      - AUTO_GENERATE_MIGRATIONS=true # Set to false in production
+      - AUTO_GENERATE_MIGRATIONS=false # Set to false in production
     depends_on:
       db:
         condition: service_healthy
