@@ -3,13 +3,13 @@
 import { useMemo } from 'react';
 
 import {
-    AreaChart,
     Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
 } from 'recharts';
 
 import { Heading, Text } from '@/components/ui/typography/Text';
@@ -47,7 +47,7 @@ export function PriceHistoryChart({
 }: PriceHistoryChartProps) {
     // Fiyat istatistikleri
     const stats = useMemo(() => {
-        if (data.length === 0) return null;
+        if (data.length === 0) {return null;}
         const prices = data.map((p) => p.price);
         return {
             min: Math.min(...prices),
@@ -211,7 +211,7 @@ export function generateMockPriceHistory(
 
         data.push({
             date: date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }),
-            price: price,
+            price,
             provider: 'En Düşük',
         });
     }

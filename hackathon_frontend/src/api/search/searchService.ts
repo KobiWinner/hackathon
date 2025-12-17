@@ -4,17 +4,17 @@
  */
 
 import { httpClient } from "../httpClient";
-import { normalizeAxiosError, type ApiError } from "../types";
+import { type ApiError, normalizeAxiosError } from "../types";
 
 import type {
     ProductSearchParams,
     ProductSearchResponse,
     ProductSearchResult,
-    SearchSuggestion,
     // Legacy types
     SearchOptions,
     SearchResponse,
     SearchResult,
+    SearchSuggestion,
 } from "./types";
 
 // API endpoint

@@ -1,15 +1,17 @@
 'use client';
 
+import { Suspense, useEffect, useState } from 'react';
+
+import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
 
 import { ChevronLeft, ChevronRight, Filter, Loader2, Package, X } from 'lucide-react';
 
 import {
-    categoryService,
     type CategoryProduct,
     type CategoryWithProductsResponse,
+    categoryService,
 } from '@/api/categories';
 import { Button } from '@/components/ui/buttons/Button';
 import { Skeleton } from '@/components/ui/feedback/Skeleton';
@@ -28,10 +30,12 @@ function ProductCard({ product }: { product: CategoryProduct }) {
             {/* Ürün Görseli */}
             <div className="relative aspect-square bg-muted overflow-hidden">
                 {product.image_url ? (
-                    <img
+                    <Image
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -109,7 +113,7 @@ function Pagination({
     totalPages: number;
     onPageChange: (page: number) => void;
 }) {
-    if (totalPages <= 1) return null;
+    if (totalPages <= 1) { return null; }
 
     const pages: (number | 'ellipsis')[] = [];
 
@@ -194,27 +198,35 @@ function CategoryContent() {
     const [showFilters, setShowFilters] = useState(false);
 
     // Kategori ve ürünleri yükle
-    const loadCategory = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-
-        const result = await categoryService.getWithProducts(slug, {
-            page: currentPage,
-            page_size: 24,
-        });
-
-        if (result.success) {
-            setData(result.data);
-        } else {
-            setError(result.error.message);
-        }
-
-        setIsLoading(false);
-    }, [slug, currentPage]);
-
     useEffect(() => {
-        loadCategory();
-    }, [loadCategory]);
+        let isMounted = true;
+
+        const fetchData = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            const result = await categoryService.getWithProducts(slug, {
+                page: currentPage,
+                page_size: 24,
+            });
+
+            if (!isMounted) { return; }
+
+            if (result.success) {
+                setData(result.data);
+            } else {
+                setError(result.error.message);
+            }
+
+            setIsLoading(false);
+        };
+
+        void fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [slug, currentPage]);
 
     // Sayfa değiştir
     const handlePageChange = (page: number) => {

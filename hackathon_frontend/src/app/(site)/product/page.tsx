@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -9,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 
 import { searchService } from '@/api/search';
 import type { ProductSearchResult } from '@/api/search';
-import { ProductFilter, type FilterValues, type FilterOption } from '@/components/ProductFilter';
+import { type FilterOption, type FilterValues, ProductFilter } from '@/components/ProductFilter';
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
@@ -178,9 +179,9 @@ export default function ProductListPage() {
         let count = 0;
         count += activeFilters.categories.length;
         count += activeFilters.brands.length;
-        if (activeFilters.minPrice) count++;
-        if (activeFilters.maxPrice) count++;
-        if (activeFilters.sortBy) count++;
+        if (activeFilters.minPrice) { count++; }
+        if (activeFilters.maxPrice) { count++; }
+        if (activeFilters.sortBy) { count++; }
         return count;
     }, [activeFilters]);
 
@@ -221,8 +222,11 @@ export default function ProductListPage() {
                     <div className="fixed inset-0 z-50 lg:hidden">
                         {/* Backdrop */}
                         <div
+                            role="button"
+                            tabIndex={0}
                             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                             onClick={() => setIsMobileFilterOpen(false)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setIsMobileFilterOpen(false); } }}
                         />
                         {/* Filter Panel */}
                         <div className="absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-background animate-slide-in-left">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/buttons/Button';
 import { Input } from '@/components/ui/Input';
@@ -192,9 +192,9 @@ export function ProductFilter({
         let count = 0;
         count += filters.categories.length;
         count += filters.brands.length;
-        if (filters.minPrice) count++;
-        if (filters.maxPrice) count++;
-        if (filters.sortBy) count++;
+        if (filters.minPrice) {count++;}
+        if (filters.maxPrice) {count++;}
+        if (filters.sortBy) {count++;}
         return count;
     }, [filters]);
 

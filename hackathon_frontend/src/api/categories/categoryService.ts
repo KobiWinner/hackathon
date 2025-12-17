@@ -4,7 +4,7 @@
  */
 
 import { httpClient } from "../httpClient";
-import { normalizeAxiosError, type ApiError } from "../types";
+import { type ApiError, normalizeAxiosError } from "../types";
 
 import type {
     CategoryProductsParams,

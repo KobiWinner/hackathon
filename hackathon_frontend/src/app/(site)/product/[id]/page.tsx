@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -20,7 +21,7 @@ import {
     TIME_RANGES,
     generateMockPriceHistory,
 } from '@/components/product';
-import type { ProviderPrice, TimeRangeKey, PriceStats } from '@/components/product';
+import type { PriceStats, ProviderPrice, TimeRangeKey } from '@/components/product';
 import { Button } from '@/components/ui/buttons/Button';
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
@@ -94,23 +95,23 @@ export default function ProductDetailPage() {
 
     // Computed values
     const providerPrices = useMemo(() => {
-        if (!product?.lowest_price) return [];
+        if (!product?.lowest_price) {return [];}
         return generateMockProviderPrices(product.lowest_price);
     }, [product?.lowest_price]);
 
     const priceHistory = useMemo(() => {
-        if (!product?.lowest_price) return [];
+        if (!product?.lowest_price) {return [];}
         const range = TIME_RANGES.find((r) => r.key === selectedTimeRange);
         return generateMockPriceHistory(product.lowest_price, range?.days || 30);
     }, [product?.lowest_price, selectedTimeRange]);
 
     const lowestPrice = useMemo(() => {
-        if (providerPrices.length === 0) return null;
+        if (providerPrices.length === 0) {return null;}
         return providerPrices.reduce((min, p) => (p.price < min.price ? p : min), providerPrices[0]);
     }, [providerPrices]);
 
     const priceStats: PriceStats | null = useMemo(() => {
-        if (priceHistory.length === 0) return null;
+        if (priceHistory.length === 0) {return null;}
         const prices = priceHistory.map((p) => p.price);
         return {
             min: Math.min(...prices),
@@ -121,7 +122,7 @@ export default function ProductDetailPage() {
     }, [priceHistory]);
 
     const discountPercentage = useMemo(() => {
-        if (!product?.original_price || !product?.lowest_price) return product?.discount_percentage || 0;
+        if (!product?.original_price || !product?.lowest_price) {return product?.discount_percentage || 0;}
         return Math.round(((product.original_price - product.lowest_price) / product.original_price) * 100);
     }, [product]);
 

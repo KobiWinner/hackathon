@@ -16,7 +16,7 @@ export function SizeSelector({
     onSizeSelect,
     className,
 }: SizeSelectorProps) {
-    if (sizes.length === 0) return null;
+    if (sizes.length === 0) {return null;}
 
     const isInteractive = !!onSizeSelect;
 

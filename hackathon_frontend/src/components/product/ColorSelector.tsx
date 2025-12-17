@@ -16,7 +16,7 @@ export function ColorSelector({
     onColorSelect,
     className,
 }: ColorSelectorProps) {
-    if (colors.length === 0) return null;
+    if (colors.length === 0) {return null;}
 
     return (
         <div className={cn('pt-4 border-t border-border', className)}>
