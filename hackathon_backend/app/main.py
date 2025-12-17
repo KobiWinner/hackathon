@@ -5,13 +5,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import api_router
-from app.api.v1.endpoints.providers import router as providers_router
 from app.core.config.settings import settings
 from app.core.infrastructure.cache import cache
 from app.core.infrastructure.logging import setup_logging
 from app.core.web.middleware import RequestLoggerMiddleware
 from app.domain.schemas.common import HealthCheck
-from app.api.v1 import api_router
 
 
 # Lifespan context manager (Startup ve Shutdown olayları için modern yöntem)
@@ -50,8 +48,6 @@ app.add_middleware(RequestLoggerMiddleware)
 
 # Tüm API rotalarını uygulamaya ekliyoruz
 app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(providers_router, prefix=settings.API_V1_STR)
-app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/", response_model=HealthCheck)

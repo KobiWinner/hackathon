@@ -41,28 +41,26 @@ async def seed_data():
                 logger.info(f"Currency exists: {currency_data['code']}")
         
         # 2. Seed Providers
-        providers = [
             {
                 "name": "Sport Direct", 
                 "slug": "sport_direct", 
-                "base_url": "http://hackathon_mocker:8001/sport-direct"
+                "base_url": "http://mocker_api:8000/api/v1/providers/sport-direct"
             },
             {
                 "name": "Outdoor Pro", 
                 "slug": "outdoor_pro", 
-                "base_url": "http://hackathon_mocker:8001/outdoor-pro"
+                "base_url": "http://mocker_api:8000/api/v1/providers/outdoor-pro"
             },
             {
                 "name": "Dag Spor", 
                 "slug": "dag_spor", 
-                "base_url": "http://hackathon_mocker:8001/dag-spor"
+                "base_url": "http://mocker_api:8000/api/v1/providers/dag-spor"
             },
             {
                 "name": "Alpine Gear", 
                 "slug": "alpine_gear", 
-                "base_url": "http://hackathon_mocker:8001/alpine-gear"
+                "base_url": "http://mocker_api:8000/api/v1/providers/alpine-gear"
             },
-        ]
         
         for provider_data in providers:
             stmt = text(f"SELECT id FROM providers WHERE slug = '{provider_data['slug']}'")

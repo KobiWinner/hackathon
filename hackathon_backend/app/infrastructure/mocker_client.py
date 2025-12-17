@@ -14,7 +14,9 @@ class MockerClient:
     Includes resilience patterns (Retry, Circuit Breaker).
     """
     
-    BASE_URL = "http://host.docker.internal:8002/api/v1/providers" # Host network URL
+    
+    # Internal Docker Network üzerinden iletişim
+    BASE_URL = "http://mocker_api:8000/api/v1/providers"
 
     def __init__(self):
         self.timeout = httpx.Timeout(10.0, connect=5.0)
