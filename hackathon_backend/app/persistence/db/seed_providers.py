@@ -27,7 +27,6 @@ async def seed_data():
         ]
         
         for currency_data in currencies:
-            # Check if exists
             result = await uow.db.execute(
                 text(f"SELECT id FROM currencies WHERE code = '{currency_data['code']}'")
             )
@@ -41,6 +40,7 @@ async def seed_data():
                 logger.info(f"Currency exists: {currency_data['code']}")
         
         # 2. Seed Providers
+        providers = [
             {
                 "name": "Sport Direct", 
                 "slug": "sport_direct", 
@@ -61,6 +61,7 @@ async def seed_data():
                 "slug": "alpine_gear", 
                 "base_url": "http://mocker_api:8000/api/v1/providers/alpine-gear"
             },
+        ]
         
         for provider_data in providers:
             stmt = text(f"SELECT id FROM providers WHERE slug = '{provider_data['slug']}'")
