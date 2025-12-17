@@ -3,12 +3,13 @@ from typing import Any, Dict, List
 from app.core.patterns.pipeline import BaseStep, PipelineContext
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
 from app.persistence.models.products.product import Product
+from app.persistence.models.products.product_variant import ProductVariant
 
 
 class MatchProductStep(BaseStep):
     """
     ProductMapping kayıtlarını bir 'Product' (Ana Ürün) ile eşleştirir.
-    Eğer eşleşen ürün yoksa yeni ürün oluşturur.
+    Eğer eşleşen ürün yoksa yeni ürün oluşturur ve varyantları kaydeder.
 
     Heuristic:
     1. İsim normalizasyonu (lowercase, trim).
@@ -35,6 +36,7 @@ class MatchProductStep(BaseStep):
 
         matched_count = 0
         created_count = 0
+        variants_created = 0
         errors = []
 
         for item in products:
@@ -70,14 +72,43 @@ class MatchProductStep(BaseStep):
                         name=normalized_name,
                         slug=slug,
                         description=item.get("description"),
+                        brand=item.get("brand"),
                     )
                     self.uow.products.db.add(product)
                     await self.uow.session.flush()  # ID almak için flush
+                    
+                    # 3. Varyantları oluştur (renkler ve bedenler)
+                    colors = item.get("colors", [])
+                    sizes = item.get("sizes", [])
+                    
+                    # Her renk-beden kombinasyonu için varyant oluştur
+                    if colors and sizes:
+                        for color in colors:
+                            for size in sizes:
+                                sku = f"{slug}-{color.lower()[:3]}-{size}".replace(" ", "-")
+                                variant = ProductVariant(
+                                    product_id=product.id,
+                                    sku=sku,
+                                    attributes={"color": color, "size": size}
+                                )
+                                self.uow.session.add(variant)
+                                variants_created += 1
+                    elif colors:
+                        for color in colors:
+                            sku = f"{slug}-{color.lower()[:3]}".replace(" ", "-")
+                            variant = ProductVariant(
+                                product_id=product.id,
+                                sku=sku,
+                                attributes={"color": color}
+                            )
+                            self.uow.session.add(variant)
+                            variants_created += 1
+                    
                     created_count += 1
                 else:
                     matched_count += 1
 
-                # 3. Mapping'i güncelle - product_id ataması (ORM entity gerekli)
+                # 4. Mapping'i güncelle - product_id ataması (ORM entity gerekli)
                 mapping = await self.uow.product_mappings.get_orm(mapping_id)
                 if mapping:
                     mapping.product_id = product.id
@@ -99,9 +130,9 @@ class MatchProductStep(BaseStep):
         # Meta güncelleme
         context.meta["products_matched_existing"] = matched_count
         context.meta["products_created"] = created_count
+        context.meta["variants_created"] = variants_created
         if errors:
             context.errors.extend(errors)
 
         # Result'ı ayarla (bir sonraki step için)
         context.result = products
-

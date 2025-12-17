@@ -194,14 +194,36 @@ class MockProviderService:
                 config["price_modifier"]
             )
             
+            # Generate variant data (colors and sizes based on category)
+            available_colors = random.sample(COLORS, k=random.randint(2, 4))
+            
+            # Generate sizes based on product category
+            category = master.get("category", "")
+            subcategory = master.get("subcategory", "")
+            
+            if subcategory in ["Ayakkabı"]:
+                available_sizes = ["38", "39", "40", "41", "42", "43", "44", "45"]
+            elif subcategory in ["Giyim", "Wetsuit"]:
+                available_sizes = ["XS", "S", "M", "L", "XL", "XXL"]
+            elif subcategory in ["Kayak", "Snowboard"]:
+                available_sizes = ["155", "160", "165", "170", "175", "180"]
+            elif subcategory in ["Çadır", "Uyku Tulumu"]:
+                available_sizes = ["1 Kişilik", "2 Kişilik", "3 Kişilik"]
+            else:
+                available_sizes = ["Standart"]
+            
             products.append(UnifiedProduct(
                 provider=provider,
                 provider_product_id=str(idx),
                 name=master["name"],
                 description=f"{master['brand']} - {master['category']}",
+                brand=master.get("brand"),
+                category=master.get("category"),
                 price=price,
                 currency=config["currency"],
                 stock=stock,
+                colors=available_colors,
+                sizes=available_sizes,
                 collected_at=collected_at
             ))
         

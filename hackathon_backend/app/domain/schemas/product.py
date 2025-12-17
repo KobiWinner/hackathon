@@ -20,7 +20,16 @@ class UnifiedProduct(BaseModel):
     url: Optional[str] = None
     image_url: Optional[str] = None
     
+    # Product details
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    
+    # Variant information
+    colors: List[str] = []
+    sizes: List[str] = []
+    
     # Metadata for resilience and tracking
     collected_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
+
