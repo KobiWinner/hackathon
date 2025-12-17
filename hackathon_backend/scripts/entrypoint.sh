@@ -57,24 +57,6 @@ if [ "$#" -eq 0 ]; then
     echo "🔄 Running database migrations..."
     alembic upgrade head
     echo "✅ Migrations completed!"
-
-    # Elasticsearch index'i oluştur/güncelle
-    echo ""
-    echo "🔍 Initializing Elasticsearch index..."
-    python -c "
-import asyncio
-from app.application.services.product_search_service import get_product_search_service
-
-async def init_index():
-    try:
-        service = get_product_search_service()
-        await service.ensure_index()
-        print('✅ Elasticsearch index ready!')
-    except Exception as e:
-        print(f'⚠️  Elasticsearch index init failed: {e}')
-
-asyncio.run(init_index())
-" 2>/dev/null || echo "⚠️  Elasticsearch not available, skipping index init"
 fi
 
 # Uygulamayı başlat

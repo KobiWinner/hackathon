@@ -1,263 +1,229 @@
-"""Product Search Service using Elasticsearch."""
+"""Product Search Service using PostgreSQL database."""
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import structlog
+from sqlalchemy import select, func, or_
+from sqlalchemy.orm import selectinload
 
-from app.core.infrastructure.elasticsearch import get_search_service
-from app.domain.i_services.i_search_service import ISearchService
 from app.domain.schemas.products.product_search import (
     ProductSearchRequest,
     ProductSearchResponse,
     ProductSearchResult,
 )
+from app.persistence.db.session import AsyncSessionLocal
+from app.persistence.models.products.product import Product
+from app.persistence.models.products.product_mappings import ProductMapping
+from app.persistence.models.price.price_history import PriceHistory
 
 logger = structlog.get_logger(__name__)
-
-# Index name for products
-PRODUCTS_INDEX = "products"
-
-# Elasticsearch index mapping for products
-PRODUCTS_MAPPING = {
-    "properties": {
-        "id": {"type": "integer"},
-        "name": {"type": "text", "analyzer": "standard"},
-        "slug": {"type": "keyword"},
-        "brand": {"type": "keyword"},
-        "category_id": {"type": "integer"},
-        "category_name": {"type": "text", "analyzer": "standard"},
-        "gender": {"type": "keyword"},
-        "description": {"type": "text", "analyzer": "standard"},
-        "image_url": {"type": "keyword", "index": False},
-        "lowest_price": {"type": "float"},
-        "original_price": {"type": "float"},
-        "currency_code": {"type": "keyword"},
-        "in_stock": {"type": "boolean"},
-        # Denormalized variant attributes for search
-        "colors": {"type": "text", "analyzer": "standard"},
-        "sizes": {"type": "keyword"},
-        "materials": {"type": "text", "analyzer": "standard"},
-        "variant_attributes": {"type": "text", "analyzer": "standard"},
-    }
-}
 
 
 class ProductSearchService:
     """
     Product Search Service.
-    Elasticsearch üzerinden ürün arama işlemleri.
+    PostgreSQL veritabanı üzerinden basit ürün arama işlemleri.
+    ILIKE ile isim bazlı arama yapar.
     """
 
-    def __init__(self, search_service: Optional[ISearchService] = None) -> None:
-        self._search_service = search_service
-
-    @property
-    def search(self) -> ISearchService:
-        """Lazy load search service."""
-        if self._search_service is None:
-            self._search_service = get_search_service()
-        return self._search_service
-
     async def ensure_index(self) -> bool:
-        """Index'in var olduğundan emin ol, yoksa oluştur."""
-        if not await self.search.index_exists(PRODUCTS_INDEX):
-            return await self.search.create_index(
-                PRODUCTS_INDEX,
-                mappings=PRODUCTS_MAPPING,
-            )
+        """No-op: Database araması için index gerekmez."""
         return True
-
-    async def index_product(self, product: Dict[str, Any]) -> bool:
-        """Tek bir ürünü indexle."""
-        doc_id = str(product.get("id", ""))
-        return await self.search.index_document(PRODUCTS_INDEX, doc_id, product)
-
-    async def bulk_index_products(self, products: List[Dict[str, Any]]) -> int:
-        """Toplu ürün indexle."""
-        return await self.search.bulk_index(PRODUCTS_INDEX, products, id_field="id")
 
     async def search_products(
         self, request: ProductSearchRequest
     ) -> ProductSearchResponse:
         """
         Ürün arama.
-
-        Multi-match query ile name, description, brand ve category_name
-        alanlarında arama yapar.
+        
+        PostgreSQL ILIKE ile name alanında arama yapar.
         """
-        # Build the query
-        must_clauses: List[Dict[str, Any]] = []
-        filter_clauses: List[Dict[str, Any]] = []
+        async with AsyncSessionLocal() as session:
+            # Base query
+            query = select(Product).options(
+                selectinload(Product.category),
+                selectinload(Product.variants),
+            )
 
-        # Main search query - multi_match on text fields including variants
-        # "*" karakteri tüm ürünleri getirmek için kullanılır
-        if request.q and request.q.strip() != "*":
-            must_clauses.append({
-                "multi_match": {
-                    "query": request.q,
-                    "fields": [
-                        "name^3",
-                        "brand^2",
-                        "category_name",
-                        "description",
-                        "colors^2",
-                        "materials",
-                        "variant_attributes",
-                    ],
-                    "type": "best_fields",
-                    "fuzziness": "AUTO",
-                }
-            })
+            # Search filter
+            if request.q and request.q.strip() != "*":
+                search_term = f"%{request.q.strip()}%"
+                query = query.where(
+                    or_(
+                        Product.name.ilike(search_term),
+                        Product.description.ilike(search_term),
+                        Product.brand.ilike(search_term),
+                    )
+                )
 
-        # Filters
-        if request.category_id:
-            filter_clauses.append({"term": {"category_id": request.category_id}})
+            # Category filter
+            if request.category_id:
+                query = query.where(Product.category_id == request.category_id)
 
-        if request.brand:
-            filter_clauses.append({"term": {"brand": request.brand}})
+            # Brand filter
+            if request.brand:
+                query = query.where(Product.brand == request.brand)
 
-        if request.gender:
-            filter_clauses.append({"term": {"gender": request.gender}})
+            # Gender filter
+            if request.gender:
+                query = query.where(Product.gender == request.gender)
 
-        if request.in_stock_only:
-            filter_clauses.append({"term": {"in_stock": True}})
+            # Get total count
+            count_query = select(func.count()).select_from(query.subquery())
+            total_result = await session.execute(count_query)
+            total = total_result.scalar() or 0
 
-        if request.min_price is not None:
-            filter_clauses.append({
-                "range": {"lowest_price": {"gte": float(request.min_price)}}
-            })
+            # Pagination
+            offset = (request.page - 1) * request.page_size
+            query = query.offset(offset).limit(request.page_size)
 
-        if request.max_price is not None:
-            filter_clauses.append({
-                "range": {"lowest_price": {"lte": float(request.max_price)}}
-            })
+            # Order by name
+            query = query.order_by(Product.name)
 
-        # Build final query
-        query: Dict[str, Any]
-        if must_clauses or filter_clauses:
-            query = {
-                "bool": {
-                    "must": must_clauses if must_clauses else [{"match_all": {}}],
-                    "filter": filter_clauses,
-                }
-            }
-        else:
-            query = {"match_all": {}}
+            # Execute
+            result = await session.execute(query)
+            products_db = result.scalars().all()
 
-        # Calculate offset
-        from_ = (request.page - 1) * request.page_size
+            # Get lowest prices for each product
+            products: List[ProductSearchResult] = []
+            for product in products_db:
+                # Get lowest price from price_histories via product_mappings
+                price_query = (
+                    select(PriceHistory.price, PriceHistory.original_price, PriceHistory.in_stock)
+                    .join(ProductMapping, PriceHistory.mapping_id == ProductMapping.id)
+                    .where(ProductMapping.product_id == product.id)
+                    .order_by(PriceHistory.price)
+                    .limit(1)
+                )
+                price_result = await session.execute(price_query)
+                price_row = price_result.first()
 
-        # Sort by price ascending (lowest first)
-        sort = [{"lowest_price": {"order": "asc"}}]
+                lowest_price = Decimal(str(price_row[0])) if price_row else None
+                original_price = Decimal(str(price_row[1])) if price_row and price_row[1] else None
+                in_stock = price_row[2] if price_row else True
 
-        # Execute search
-        result = await self.search.search(
-            index=PRODUCTS_INDEX,
-            query=query,
-            from_=from_,
-            size=request.page_size,
-            sort=sort,
-        )
+                # Price filter (post-filter since we need to calculate lowest price first)
+                if request.min_price is not None and lowest_price is not None:
+                    if lowest_price < request.min_price:
+                        continue
+                if request.max_price is not None and lowest_price is not None:
+                    if lowest_price > request.max_price:
+                        continue
+                if request.in_stock_only and not in_stock:
+                    continue
 
-        # Map results to response
-        products = []
-        for hit in result.get("hits", []):
-            try:
+                # Calculate discount
+                discount_pct = None
+                if original_price and lowest_price and original_price > lowest_price:
+                    discount_pct = int(((original_price - lowest_price) / original_price) * 100)
+
+                # Extract colors and sizes from variants
+                colors: List[str] = []
+                sizes: List[str] = []
+                if product.variants:
+                    for v in product.variants:
+                        attrs = v.attributes or {}
+                        if attrs.get("color"):
+                            colors.append(str(attrs["color"]))
+                        if attrs.get("size"):
+                            sizes.append(str(attrs["size"]))
+
                 products.append(ProductSearchResult(
-                    id=hit.get("id", 0),
-                    name=hit.get("name", ""),
-                    slug=hit.get("slug"),
-                    brand=hit.get("brand"),
-                    category_id=hit.get("category_id"),
-                    category_name=hit.get("category_name"),
-                    gender=hit.get("gender"),
-                    image_url=hit.get("image_url"),
-                    description=hit.get("description"),
-                    lowest_price=(
-                        Decimal(str(hit["lowest_price"]))
-                        if hit.get("lowest_price")
-                        else None
-                    ),
-                    original_price=(
-                        Decimal(str(hit["original_price"]))
-                        if hit.get("original_price")
-                        else None
-                    ),
-                    currency_code=hit.get("currency_code", "TRY"),
-                    in_stock=hit.get("in_stock", True),
-                    colors=hit.get("colors", []),
-                    sizes=hit.get("sizes", []),
-                    materials=hit.get("materials", []),
+                    id=product.id,
+                    name=product.name,
+                    slug=product.slug,
+                    brand=product.brand,
+                    category_id=product.category_id,
+                    category_name=product.category.name if product.category else None,
+                    gender=product.gender,
+                    image_url=product.image_url,
+                    description=product.description,
+                    lowest_price=lowest_price,
+                    original_price=original_price,
+                    currency_code="TRY",
+                    in_stock=in_stock,
+                    colors=list(set(colors)),
+                    sizes=list(set(sizes)),
+                    materials=[],
+                    discount_percentage=discount_pct,
                 ))
-            except Exception as e:
-                logger.warning("Failed to parse search hit", error=str(e), hit=hit)
-                continue
 
-        return ProductSearchResponse(
-            query=request.q,
-            products=products,
-            total=result.get("total", 0),
-            page=request.page,
-            page_size=request.page_size,
-        )
+            return ProductSearchResponse(
+                query=request.q,
+                products=products,
+                total=total,
+                page=request.page,
+                page_size=request.page_size,
+            )
 
     async def get_product_by_id(self, product_id: int) -> Optional[ProductSearchResult]:
-        """
-        ID ile ürün getir.
-
-        Elasticsearch'ten term query ile tek bir ürün getirir.
-        """
-        query = {
-            "term": {"id": product_id}
-        }
-
-        result = await self.search.search(
-            index=PRODUCTS_INDEX,
-            query=query,
-            from_=0,
-            size=1,
-        )
-
-        hits = result.get("hits", [])
-        if not hits:
-            return None
-
-        hit = hits[0]
-        try:
-            return ProductSearchResult(
-                id=hit.get("id", 0),
-                name=hit.get("name", ""),
-                slug=hit.get("slug"),
-                brand=hit.get("brand"),
-                category_id=hit.get("category_id"),
-                category_name=hit.get("category_name"),
-                gender=hit.get("gender"),
-                image_url=hit.get("image_url"),
-                description=hit.get("description"),
-                lowest_price=(
-                    Decimal(str(hit["lowest_price"]))
-                    if hit.get("lowest_price")
-                    else None
-                ),
-                original_price=(
-                    Decimal(str(hit["original_price"]))
-                    if hit.get("original_price")
-                    else None
-                ),
-                currency_code=hit.get("currency_code", "TRY"),
-                in_stock=hit.get("in_stock", True),
-                colors=hit.get("colors", []),
-                sizes=hit.get("sizes", []),
-                materials=hit.get("materials", []),
+        """ID ile ürün getir."""
+        async with AsyncSessionLocal() as session:
+            query = (
+                select(Product)
+                .options(
+                    selectinload(Product.category),
+                    selectinload(Product.variants),
+                )
+                .where(Product.id == product_id)
             )
-        except Exception as e:
-            logger.warning("Failed to parse product", error=str(e), hit=hit)
-            return None
+            result = await session.execute(query)
+            product = result.scalars().first()
 
-    async def delete_product(self, product_id: int) -> bool:
-        """Ürünü index'ten sil."""
-        return await self.search.delete_document(PRODUCTS_INDEX, str(product_id))
+            if not product:
+                return None
+
+            # Get lowest price
+            price_query = (
+                select(PriceHistory.price, PriceHistory.original_price, PriceHistory.in_stock)
+                .join(ProductMapping, PriceHistory.mapping_id == ProductMapping.id)
+                .where(ProductMapping.product_id == product.id)
+                .order_by(PriceHistory.price)
+                .limit(1)
+            )
+            price_result = await session.execute(price_query)
+            price_row = price_result.first()
+
+            lowest_price = Decimal(str(price_row[0])) if price_row else None
+            original_price = Decimal(str(price_row[1])) if price_row and price_row[1] else None
+            in_stock = price_row[2] if price_row else True
+
+            # Calculate discount
+            discount_pct = None
+            if original_price and lowest_price and original_price > lowest_price:
+                discount_pct = int(((original_price - lowest_price) / original_price) * 100)
+
+            # Extract colors and sizes
+            colors: List[str] = []
+            sizes: List[str] = []
+            if product.variants:
+                for v in product.variants:
+                    attrs = v.attributes or {}
+                    if attrs.get("color"):
+                        colors.append(str(attrs["color"]))
+                    if attrs.get("size"):
+                        sizes.append(str(attrs["size"]))
+
+            return ProductSearchResult(
+                id=product.id,
+                name=product.name,
+                slug=product.slug,
+                brand=product.brand,
+                category_id=product.category_id,
+                category_name=product.category.name if product.category else None,
+                gender=product.gender,
+                image_url=product.image_url,
+                description=product.description,
+                lowest_price=lowest_price,
+                original_price=original_price,
+                currency_code="TRY",
+                in_stock=in_stock,
+                colors=list(set(colors)),
+                sizes=list(set(sizes)),
+                materials=[],
+                discount_percentage=discount_pct,
+            )
 
 
 # Factory function
