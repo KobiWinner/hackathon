@@ -4,6 +4,7 @@ from typing import Optional, Type
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
+from app.infrastructure.repositories.category_repository import CategoryRepository
 from app.infrastructure.repositories.conversation_repository import (
     ConversationRepository,
 )
@@ -76,6 +77,10 @@ class UnitOfWork(IUnitOfWork):
     @property
     def messages(self) -> MessageRepository:
         return MessageRepository(self.db)
+
+    @property
+    def categories(self) -> CategoryRepository:
+        return CategoryRepository(self.db)
 
     @property
     def db(self) -> AsyncSession:

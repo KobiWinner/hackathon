@@ -3,6 +3,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Optional, Type
 
 if TYPE_CHECKING:
+    from app.domain.i_repositories.i_category_repository import ICategoryRepository
     from app.domain.i_repositories.i_price_history_repository import (
         IPriceHistoryRepository,
     )
@@ -60,4 +61,9 @@ class IUnitOfWork(ABC):
     @property
     @abstractmethod
     def product_mappings(self) -> "IProductMappingRepository":
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def categories(self) -> "ICategoryRepository":
         raise NotImplementedError
