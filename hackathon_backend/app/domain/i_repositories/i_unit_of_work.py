@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, Optional, Type, Any
 
 if TYPE_CHECKING:
     from app.domain.i_repositories.i_category_repository import ICategoryRepository

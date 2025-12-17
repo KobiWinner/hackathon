@@ -17,8 +17,8 @@ class NormalizeCurrencyStep(BaseStep):
         self.currency_service = currency_service
 
     async def process(self, context: PipelineContext) -> None:
-        products: List[Dict[str, Any]] = context.data
-
+        products: List[Dict[str, Any]] = context.data or []
+        
         if not products:
             context.errors.append("Boş ürün listesi alındı.")
             return

@@ -17,6 +17,9 @@ from app.infrastructure.repositories.product_mapping_repository import (
 )
 from app.infrastructure.repositories.role_repository import RoleRepository
 from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.repositories.provider_repository import ProviderRepository
+from app.infrastructure.repositories.product_repository import ProductRepository
 from app.persistence.db.session import AsyncSessionLocal
 
 
@@ -81,6 +84,14 @@ class UnitOfWork(IUnitOfWork):
     @property
     def categories(self) -> CategoryRepository:
         return CategoryRepository(self.db)
+
+    @property
+    def providers(self) -> ProviderRepository:
+        return ProviderRepository(self.db)
+
+    @property
+    def products(self) -> ProductRepository:
+        return ProductRepository(self.db)
 
     @property
     def db(self) -> AsyncSession:
