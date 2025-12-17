@@ -10,3 +10,4 @@ from app.persistence.models.providers.provider import Provider # noqa: F401
 from app.persistence.models.price.currency import Currency # noqa: F401
 from app.persistence.models.price.price_history import PriceHistory # noqa: F401
 from app.persistence.models.price.price_tier import PriceTier # noqa: F401
+from app.persistence.models.analytics.trending_product import TrendingProduct # noqa: F401

@@ -16,6 +16,9 @@ from app.application.pipelines.analytics.steps.save_price_history_step import (
 from app.application.pipelines.analytics.steps.trend_analysis_step import (
     TrendAnalysisStep,
 )
+from app.application.pipelines.analytics.steps.update_trending_step import (
+    UpdateTrendingStep,
+)
 from app.application.pipelines.base import BasePipeline
 from app.domain.i_repositories.i_unit_of_work import IUnitOfWork
 from app.domain.i_services.i_currency_service import ICurrencyService
@@ -29,6 +32,9 @@ class ProductAnalysisPipeline(BasePipeline):
     Adımlar:
     1. NormalizeCurrencyStep: Fiyatları TRY'ye çevirir
     2. FindOrCreateMappingStep: Provider mapping'i bulur/oluşturur
+    3. SavePriceHistoryStep: Fiyat geçmişini kaydeder
+    4. TrendAnalysisStep: Fiyat trendini analiz eder
+    5. UpdateTrendingStep: Top 5 trending ürünü kaydeder
     3. MatchProductStep: Ürün eşleştirmesi yapar
     4. SavePriceHistoryStep: Fiyat geçmişini kaydeder
     5. TrendAnalysisStep: Fiyat trendini analiz eder
@@ -52,6 +58,11 @@ class ProductAnalysisPipeline(BasePipeline):
 
         # Adım 5: Trend Analizi
         self.add_step(TrendAnalysisStep(uow))
+
+        # Adım 5: Trending Ürünleri Güncelle
+        self.add_step(UpdateTrendingStep(uow))
+
+
 
         # Adım 6: Güvenilirlik Ağırlıklandırması
         self.add_step(ReliabilityWeightingStep(uow))
