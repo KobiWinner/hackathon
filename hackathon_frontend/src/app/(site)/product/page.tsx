@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,7 +14,30 @@ import { type FilterOption, type FilterValues, ProductFilter } from '@/component
 import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
+function ProductListLoading() {
+    return (
+        <div className="min-h-screen bg-background py-8">
+            <Container>
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+                        <Text color="muted">Sayfa yükleniyor...</Text>
+                    </div>
+                </div>
+            </Container>
+        </div>
+    );
+}
+
 export default function ProductListPage() {
+    return (
+        <Suspense fallback={<ProductListLoading />}>
+            <ProductListContent />
+        </Suspense>
+    );
+}
+
+function ProductListContent() {
     const searchParams = useSearchParams();
     const queryFromUrl = searchParams.get('q') || '';
 
