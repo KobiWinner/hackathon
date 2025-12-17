@@ -118,6 +118,48 @@ GitLab'da pipeline'a git ve **"Play"** butonuna tıkla.
 
 ---
 
+## 4.5. External IP Alma (LoadBalancer)
+
+Deploy tamamlandıktan sonra GKE otomatik olarak external IP atar.
+
+### IP'leri Görüntüleme
+```bash
+kubectl get svc -n hackathon
+```
+
+### Örnek Çıktı
+```
+NAME           TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)        AGE
+frontend-lb    LoadBalancer   10.0.10.5      35.225.136.228   80:31234/TCP   5m
+backend-lb     LoadBalancer   10.0.10.6      34.9.11.2        80:31235/TCP   5m
+```
+
+### Erişim URL'leri
+| Servis | URL | Açıklama |
+|--------|-----|----------|
+| **Frontend** | `http://<FRONTEND_EXTERNAL_IP>` | Ana uygulama |
+| **Backend API** | `http://<BACKEND_EXTERNAL_IP>/api/v1/` | API endpoint'leri |
+| **Swagger Docs** | `http://<BACKEND_EXTERNAL_IP>/docs` | API dokümantasyonu |
+
+### Static IP Kullanmak (Opsiyonel)
+IP'nin değişmemesini istiyorsan:
+
+```bash
+# 1. GCP'de static IP reserve et
+gcloud compute addresses create hackathon-frontend-ip --region=us-central1
+gcloud compute addresses create hackathon-backend-ip --region=us-central1
+
+# 2. IP'leri görüntüle
+gcloud compute addresses list
+
+# 3. ingress.yaml'da annotation ekle
+# cloud.google.com/load-balancer-ip: "YOUR_STATIC_IP"
+```
+
+> **💡 NOT:** `EXTERNAL-IP` sütunu `<pending>` gösteriyorsa, birkaç dakika bekle. GKE IP atama işlemi 1-3 dakika sürebilir.
+
+---
+
 ## 5. Hata Çözümleri
 
 ### 🔴 Hata: "permission denied" veya "Forbidden"
