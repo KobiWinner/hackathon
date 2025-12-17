@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import { Loader2 } from 'lucide-react';
 
@@ -27,22 +27,23 @@ import { Container } from '@/components/ui/Container';
 import { Caption, Heading, Text } from '@/components/ui/typography/Text';
 
 // Mock satıcı fiyatları üretici - API entegrasyonu olduğunda kaldırılacak
-const generateMockProviderPrices = (basePrice: number): ProviderPrice[] => {
+// Ürün ID'sine göre sabit değerler üretiyor
+const generateMockProviderPrices = (basePrice: number, productId: number): ProviderPrice[] => {
     const providers = [
-        { name: 'Amazon', rating: 4.8, shippingDays: 2 },
-        { name: 'Trendyol', rating: 4.6, shippingDays: 3 },
-        { name: 'Hepsiburada', rating: 4.5, shippingDays: 2 },
-        { name: 'N11', rating: 4.3, shippingDays: 4 },
-        { name: 'GittiGidiyor', rating: 4.2, shippingDays: 3 },
+        { name: 'Amazon', rating: 4.8, shippingDays: 2, priceMultiplier: 0.95 },
+        { name: 'Trendyol', rating: 4.6, shippingDays: 3, priceMultiplier: 1.0 },
+        { name: 'Hepsiburada', rating: 4.5, shippingDays: 2, priceMultiplier: 1.02 },
+        { name: 'N11', rating: 4.3, shippingDays: 4, priceMultiplier: 1.05 },
+        { name: 'GittiGidiyor', rating: 4.2, shippingDays: 3, priceMultiplier: 1.08 },
     ];
 
     return providers
         .map((p, i) => ({
             id: i + 1,
             provider: p.name,
-            price: Math.round(basePrice * (1 + (Math.random() - 0.3) * 0.2)),
-            originalPrice: Math.round(basePrice * 1.2 * (1 + Math.random() * 0.1)),
-            inStock: Math.random() > 0.2,
+            price: Math.round(basePrice * p.priceMultiplier + (productId % 100)),
+            originalPrice: Math.round(basePrice * 1.2 + (productId % 50)),
+            inStock: (productId + i) % 5 !== 0, // Deterministik stok durumu
             rating: p.rating,
             shippingDays: p.shippingDays,
         }))
@@ -51,6 +52,7 @@ const generateMockProviderPrices = (basePrice: number): ProviderPrice[] => {
 
 export default function ProductDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const productId = Number(params.id);
 
     // State
@@ -95,44 +97,45 @@ export default function ProductDetailPage() {
 
     // Computed values
     const providerPrices = useMemo(() => {
-        if (!product?.lowest_price) {return [];}
-        return generateMockProviderPrices(product.lowest_price);
-    }, [product?.lowest_price]);
+        if (!product?.lowest_price) { return []; }
+        return generateMockProviderPrices(product.lowest_price, productId);
+    }, [product?.lowest_price, productId]);
 
     const priceHistory = useMemo(() => {
-        if (!product?.lowest_price) {return [];}
+        if (!product?.lowest_price) { return []; }
         const range = TIME_RANGES.find((r) => r.key === selectedTimeRange);
         return generateMockPriceHistory(product.lowest_price, range?.days || 30);
     }, [product?.lowest_price, selectedTimeRange]);
 
     const lowestPrice = useMemo(() => {
-        if (providerPrices.length === 0) {return null;}
+        if (providerPrices.length === 0) { return null; }
         return providerPrices.reduce((min, p) => (p.price < min.price ? p : min), providerPrices[0]);
     }, [providerPrices]);
 
     const priceStats: PriceStats | null = useMemo(() => {
-        if (priceHistory.length === 0) {return null;}
-        const prices = priceHistory.map((p) => p.price);
+        if (providerPrices.length === 0) { return null; }
+        const prices = providerPrices.map((p) => p.price);
         return {
             min: Math.min(...prices),
             max: Math.max(...prices),
             avg: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
-            current: prices[prices.length - 1],
+            current: prices[0], // En düşük fiyat (sıralı olduğu için)
         };
-    }, [priceHistory]);
+    }, [providerPrices]);
 
     const discountPercentage = useMemo(() => {
-        if (!product?.original_price || !product?.lowest_price) {return product?.discount_percentage || 0;}
+        if (!product?.original_price || !product?.lowest_price) { return product?.discount_percentage || 0; }
         return Math.round(((product.original_price - product.lowest_price) / product.original_price) * 100);
     }, [product]);
 
     // Handlers
     const handleProviderClick = (provider: ProviderPrice) => {
-        if (provider.url) {
-            window.open(provider.url, '_blank');
-        } else {
-            alert(`${provider.provider} satıcısına yönlendiriliyorsunuz...`);
-        }
+        const params = new URLSearchParams({
+            provider: provider.provider,
+            price: provider.price.toString(),
+            product: product?.name || '',
+        });
+        router.push(`/salesPerson?${params.toString()}`);
     };
 
     // Loading state

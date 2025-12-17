@@ -1,6 +1,5 @@
 export const APP_ROUTES = {
   home: "/",
-  dashboard: "/dashboard",
   settings: "/settings",
 } as const;
 

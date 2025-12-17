@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import Link from "next/link";
 
-import { Menu, User, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import {
   CategoriesDropdown,
@@ -47,19 +47,6 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
 
             {/* Search Bar */}
             <SearchBar className="flex-1 max-w-2xl" />
-
-            {/* Dashboard Link */}
-            <Link
-              href="/dashboard"
-              className={cn(
-                'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all',
-                'bg-muted hover:bg-primary-50 hover:text-primary',
-                'font-medium'
-              )}
-            >
-              <User className="h-5 w-5" />
-              <span className="hidden lg:inline">Dashboard</span>
-            </Link>
           </div>
 
           {/* Mobile Layout */}
@@ -72,25 +59,17 @@ export function SiteHeader({ isScrolled = false }: SiteHeaderProps) {
                 </Text>
               </Link>
 
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/dashboard"
-                  className="p-2.5 rounded-xl text-foreground hover:bg-muted transition-colors"
-                >
-                  <User className="h-5 w-5" />
-                </Link>
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="p-2.5 rounded-xl text-foreground hover:bg-muted transition-colors"
-                  aria-label={isMobileMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
-                >
-                  {isMobileMenuOpen ? (
-                    <X className="h-6 w-6" />
-                  ) : (
-                    <Menu className="h-6 w-6" />
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2.5 rounded-xl text-foreground hover:bg-muted transition-colors"
+                aria-label={isMobileMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
             </div>
 
             {/* Search Bar */}
