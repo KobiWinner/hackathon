@@ -60,10 +60,6 @@ export const createHttpClient = (
     onUnauthorized: options.onUnauthorized ?? (() => {
       // Token geçersiz olduğunda temizle
       removeToken();
-      // İsteğe bağlı: Login sayfasına yönlendir
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
     }),
     retryCount: options.retryCount ?? DEFAULT_RETRY_COUNT,
     retryDelayMs: options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS,

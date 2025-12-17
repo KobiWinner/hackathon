@@ -1,22 +1,9 @@
-// Auth API exports
+// Token service exports (httpClient için gerekli)
 export {
-    registerUser,
-    loginUser,
-    logoutUser,
     saveToken,
     removeToken,
     getToken,
     isAuthenticated,
     isTokenExpired,
     getTokenPayload,
-} from "./authService";
-
-export type {
-    RegisterRequest,
-    LoginRequest,
-    UserResponse,
-    TokenResponse,
-    AuthResponse,
-    RegisterFormData,
-    LoginFormData,
-} from "./types";
+} from "./tokenService";
