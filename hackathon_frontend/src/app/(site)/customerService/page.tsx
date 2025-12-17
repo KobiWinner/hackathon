@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/buttons/Button';
+import { Container } from '@/components/ui/Container';
 import { Input } from '@/components/ui/Input';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Heading, Text } from '@/components/ui/typography/Text';
@@ -40,7 +41,7 @@ export default function CustomerSupportPage() {
 
     // Mesaj gönder
     const sendMessage = () => {
-        if (!inputValue.trim()) {return;}
+        if (!inputValue.trim()) { return; }
 
         const now = new Date();
         const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
@@ -81,8 +82,8 @@ export default function CustomerSupportPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-24 pb-8">
-            <div className="container mx-auto max-w-2xl px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-8">
+            <Container size="sm">
                 {/* Header */}
                 <div className="mb-4 flex items-center gap-4 rounded-2xl bg-white p-4 shadow-lg">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white">
@@ -154,7 +155,7 @@ export default function CustomerSupportPage() {
                         />
                     ))}
                 </div>
-            </div>
+            </Container>
         </div>
     );
 }

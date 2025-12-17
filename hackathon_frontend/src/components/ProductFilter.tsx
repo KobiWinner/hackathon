@@ -24,6 +24,7 @@ export interface FilterOption {
 export interface ProductFilterProps {
     categories: FilterOption[];
     brands: FilterOption[];
+    priceRange?: { min: number; max: number };
     onFilter: (filters: FilterValues) => void;
     className?: string;
 }
@@ -173,6 +174,7 @@ function RadioGroup({
 export function ProductFilter({
     categories,
     brands,
+    priceRange,
     onFilter,
     className,
 }: ProductFilterProps) {
@@ -292,19 +294,26 @@ export function ProductFilter({
 
                 {/* Fiyat Aralığı */}
                 <div className="space-y-3">
-                    <Text size="sm" weight="bold" className="text-foreground">
-                        Fiyat Aralığı
-                    </Text>
+                    <div className="flex items-center justify-between">
+                        <Text size="sm" weight="bold" className="text-foreground">
+                            Fiyat Aralığı
+                        </Text>
+                        {priceRange && priceRange.max > 0 && (
+                            <Text size="xs" color="muted">
+                                ₺{priceRange.min.toLocaleString('tr-TR')} - ₺{priceRange.max.toLocaleString('tr-TR')}
+                            </Text>
+                        )}
+                    </div>
                     <div className="space-y-2">
                         <Input
                             type="number"
-                            placeholder="Min ₺"
+                            placeholder={priceRange ? `Min ₺${priceRange.min.toLocaleString('tr-TR')}` : 'Min ₺'}
                             value={filters.minPrice}
                             onChange={(e) => updateFilter('minPrice', e.target.value)}
                         />
                         <Input
                             type="number"
-                            placeholder="Max ₺"
+                            placeholder={priceRange ? `Max ₺${priceRange.max.toLocaleString('tr-TR')}` : 'Max ₺'}
                             value={filters.maxPrice}
                             onChange={(e) => updateFilter('maxPrice', e.target.value)}
                         />

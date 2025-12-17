@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { CustomerServiceFAB } from "@/components/CustomerServiceFAB";
+import { Container } from "@/components/ui/Container";
 import { useScroll } from "@/hooks";
 import { SiteFooter } from "@/layout/site/Footer";
 import { SiteHeader } from "@/layout/site/Header";
@@ -19,13 +20,13 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             >
                 <SiteHeader isScrolled={isScrolled} />
             </header>
-            {/* Main content - no padding top, hero handles it */}
-            <main className="flex-1">{children}</main>
+            {/* Main content - padding top for fixed header */}
+            <main className="flex-1 pt-24 md:pt-20">{children}</main>
             {/* Footer - full width background, centered content */}
             <footer className="mt-auto w-full border-t border-gray-200 bg-white">
-                <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+                <Container className="py-8">
                     <SiteFooter />
-                </div>
+                </Container>
             </footer>
             <CustomerServiceFAB />
         </div>
