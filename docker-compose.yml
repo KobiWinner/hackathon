@@ -177,26 +177,6 @@ services:
       - hackathon_network
 
   # ============================================
-  # MOCKER API - Provider Mock Service
-  # ============================================
-  mocker:
-    build:
-      context: ./mocker/hackathon_backend
-      dockerfile: Dockerfile
-    container_name: mocker_api
-    restart: always
-    ports:
-      - "8002:8000"
-    environment:
-      - PROJECT_NAME=MockerAPI
-      - DEBUG=true
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
-    volumes:
-      - ./mocker/hackathon_backend/app:/app/app
-    networks:
-      - hackathon_network
-
-  # ============================================
   # DOZZLE - Log Viewer
   # ============================================
   dozzle:

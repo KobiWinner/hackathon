@@ -54,18 +54,45 @@ async def seed_data():
         await session.flush()
         print(f"{len(currencies)} para birimi eklendi.")
 
-        # --- Sağlayıcılar ---
-        providers = []
-        for _ in range(10):
-            providers.append(
-                Provider(
-                    name=fake.company(),
-                    slug=fake.slug(),
-                    rating=Decimal(random.uniform(3.5, 5.0)),
-                    review_count=random.randint(50, 5000),
-                    is_verified=random.choice([True, False]),
-                )
-            )
+        # --- Sağlayıcılar (Mock API ile uyumlu) ---
+        providers = [
+            Provider(
+                name="Sport Direct",
+                slug="sport-direct",
+                rating=Decimal("4.8"),
+                review_count=2500,
+                is_verified=True,
+                description="UK based sports retailer - GBP",
+                country="UK",
+            ),
+            Provider(
+                name="Outdoor Pro",
+                slug="outdoor-pro",
+                rating=Decimal("4.5"),
+                review_count=1800,
+                is_verified=True,
+                description="US outdoor equipment retailer - USD",
+                country="USA",
+            ),
+            Provider(
+                name="Dağ Spor",
+                slug="dag-spor",
+                rating=Decimal("4.2"),
+                review_count=950,
+                is_verified=True,
+                description="Türkiye'nin dağcılık ve outdoor mağazası - TRY",
+                country="TR",
+            ),
+            Provider(
+                name="Alpine Gear",
+                slug="alpine-gear",
+                rating=Decimal("4.6"),
+                review_count=1200,
+                is_verified=True,
+                description="European premium winter sports - EUR",
+                country="EU",
+            ),
+        ]
         session.add_all(providers)
         await session.flush()
         print(f"{len(providers)} sağlayıcı eklendi.")
